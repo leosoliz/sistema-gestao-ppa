@@ -23,14 +23,14 @@ export const IdeasBank = ({ ideas, onAdd, onDelete }: IdeasBankProps) => {
     categoria: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterCategory, setFilterCategory] = useState<string>("");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
 
   const categories = Array.from(new Set(ideas.map(idea => idea.categoria).filter(Boolean)));
 
   const filteredIdeas = ideas.filter(idea => {
     const matchesSearch = idea.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          idea.produto.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !filterCategory || idea.categoria === filterCategory;
+    const matchesCategory = filterCategory === "all" || idea.categoria === filterCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -132,7 +132,7 @@ export const IdeasBank = ({ ideas, onAdd, onDelete }: IdeasBankProps) => {
             <SelectValue placeholder="Filtrar por categoria" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas as categorias</SelectItem>
+            <SelectItem value="all">Todas as categorias</SelectItem>
             {categories.map((category) => (
               <SelectItem key={category} value={category}>
                 {category}

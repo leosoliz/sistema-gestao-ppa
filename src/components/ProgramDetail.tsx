@@ -5,9 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Edit, Calendar, FileText, Target, Lightbulb } from "lucide-react";
+import { Edit, Calendar, FileText, Target, Lightbulb, Printer } from "lucide-react";
 import { Program, Idea } from "@/pages/Index";
 import { ProgramEditForm } from "./ProgramEditForm";
+import jsPDF from 'jspdf';
 
 interface ProgramDetailProps {
   program: Program;
@@ -18,6 +19,140 @@ interface ProgramDetailProps {
 
 export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: ProgramDetailProps) => {
   const [isEditing, setIsEditing] = useState(false);
+
+  const generatePDF = () => {
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const margin = 20;
+    let yPosition = 20;
+
+    // Função para adicionar texto com quebra de linha
+    const addText = (text: string, x: number, y: number, maxWidth?: number) => {
+      if (maxWidth) {
+        const lines = pdf.splitTextToSize(text, maxWidth);
+        pdf.text(lines, x, y);
+        return y + (lines.length * 6);
+      } else {
+        pdf.text(text, x, y);
+        return y + 6;
+      }
+    };
+
+    // Cabeçalho
+    pdf.setFontSize(20);
+    pdf.setFont("helvetica", "bold");
+    yPosition = addText("FICHA DO PROGRAMA", margin, yPosition);
+    yPosition += 10;
+
+    // Informações básicas do programa
+    pdf.setFontSize(16);
+    pdf.setFont("helvetica", "bold");
+    yPosition = addText(`Programa: ${program.programa}`, margin, yPosition);
+    yPosition += 5;
+
+    pdf.setFontSize(12);
+    pdf.setFont("helvetica", "normal");
+    yPosition = addText(`Secretaria: ${program.secretaria || "Não informado"}`, margin, yPosition);
+    yPosition = addText(`Departamento: ${program.departamento || "Não informado"}`, margin, yPosition);
+    yPosition = addText(`Eixo: ${program.eixo || "Não informado"}`, margin, yPosition);
+    yPosition = addText(`Data de Criação: ${program.createdAt.toLocaleDateString('pt-BR')}`, margin, yPosition);
+    yPosition += 10;
+
+    // Descrição
+    if (program.descricao) {
+      pdf.setFont("helvetica", "bold");
+      yPosition = addText("DESCRIÇÃO:", margin, yPosition);
+      pdf.setFont("helvetica", "normal");
+      yPosition = addText(program.descricao, margin, yPosition, pageWidth - 2 * margin);
+      yPosition += 5;
+    }
+
+    // Justificativa
+    if (program.justificativa) {
+      pdf.setFont("helvetica", "bold");
+      yPosition = addText("JUSTIFICATIVA:", margin, yPosition);
+      pdf.setFont("helvetica", "normal");
+      yPosition = addText(program.justificativa, margin, yPosition, pageWidth - 2 * margin);
+      yPosition += 5;
+    }
+
+    // Objetivos
+    if (program.objetivos) {
+      pdf.setFont("helvetica", "bold");
+      yPosition = addText("OBJETIVOS:", margin, yPosition);
+      pdf.setFont("helvetica", "normal");
+      yPosition = addText(program.objetivos, margin, yPosition, pageWidth - 2 * margin);
+      yPosition += 5;
+    }
+
+    // Diretrizes
+    if (program.diretrizes) {
+      pdf.setFont("helvetica", "bold");
+      yPosition = addText("DIRETRIZES:", margin, yPosition);
+      pdf.setFont("helvetica", "normal");
+      yPosition = addText(program.diretrizes, margin, yPosition, pageWidth - 2 * margin);
+      yPosition += 10;
+    }
+
+    // Ações
+    if (program.acoes.length > 0) {
+      // Verificar se precisa de nova página
+      if (yPosition > 200) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+
+      pdf.setFontSize(16);
+      pdf.setFont("helvetica", "bold");
+      yPosition = addText(`AÇÕES CADASTRADAS (${program.acoes.length})`, margin, yPosition);
+      yPosition += 10;
+
+      program.acoes.forEach((acao, index) => {
+        // Verificar se precisa de nova página para a ação
+        if (yPosition > 220) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+
+        pdf.setFontSize(14);
+        pdf.setFont("helvetica", "bold");
+        yPosition = addText(`${index + 1}. ${acao.nome}`, margin, yPosition);
+        yPosition += 5;
+
+        pdf.setFontSize(10);
+        pdf.setFont("helvetica", "normal");
+        
+        if (acao.produto) {
+          yPosition = addText(`Produto: ${acao.produto}`, margin + 5, yPosition);
+        }
+        
+        yPosition = addText(`Meta Física: ${acao.metaFisica} ${acao.unidadeMedida}`, margin + 5, yPosition);
+        
+        if (acao.orcamento) {
+          yPosition = addText(`Orçamento: ${acao.orcamento}`, margin + 5, yPosition);
+        }
+        
+        if (acao.fonte) {
+          yPosition = addText(`Fonte: ${acao.fonte}`, margin + 5, yPosition);
+        }
+        
+        yPosition += 8;
+      });
+    }
+
+    // Rodapé
+    const totalPages = pdf.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(8);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Página ${i} de ${totalPages}`, pageWidth - 30, pdf.internal.pageSize.getHeight() - 10);
+      pdf.text("Prefeitura Municipal de Presidente Getúlio", margin, pdf.internal.pageSize.getHeight() - 10);
+    }
+
+    // Salvar o PDF
+    pdf.save(`programa-${program.programa.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.pdf`);
+  };
 
   if (isEditing) {
     return (
@@ -49,10 +184,20 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: Pr
                 {program.secretaria} - {program.departamento}
               </CardDescription>
             </div>
-            <Button onClick={() => setIsEditing(true)} className="bg-blue-600 hover:bg-blue-700">
-              <Edit className="h-4 w-4 mr-2" />
-              Editar Programa
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={generatePDF} 
+                variant="outline"
+                className="border-green-600 text-green-600 hover:bg-green-50"
+              >
+                <Printer className="h-4 w-4 mr-2" />
+                Imprimir PDF
+              </Button>
+              <Button onClick={() => setIsEditing(true)} className="bg-blue-600 hover:bg-blue-700">
+                <Edit className="h-4 w-4 mr-2" />
+                Editar Programa
+              </Button>
+            </div>
           </div>
           
           <div className="flex flex-wrap gap-4 mt-4">

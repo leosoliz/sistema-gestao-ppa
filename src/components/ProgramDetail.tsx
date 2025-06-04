@@ -38,7 +38,35 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: Pr
       }
     };
 
-    // Cabeçalho
+    // Função para adicionar cabeçalho com logotipo
+    const addHeader = () => {
+      // Adicionar retângulo de fundo verde
+      pdf.setFillColor(34, 197, 94); // green-500
+      pdf.rect(0, 0, pageWidth, 40, 'F');
+      
+      // Adicionar texto do cabeçalho em branco
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(24);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("PREFEITURA MUNICIPAL", pageWidth / 2, 15, { align: 'center' });
+      
+      pdf.setFontSize(18);
+      pdf.text("DE PRESIDENTE GETÚLIO", pageWidth / 2, 25, { align: 'center' });
+      
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "normal");
+      pdf.text("Sistema de Gestão de Programas", pageWidth / 2, 35, { align: 'center' });
+      
+      // Resetar cor do texto para preto
+      pdf.setTextColor(0, 0, 0);
+      
+      return 50; // Retorna a próxima posição Y após o cabeçalho
+    };
+
+    // Adicionar cabeçalho na primeira página
+    yPosition = addHeader();
+
+    // Título da ficha
     pdf.setFontSize(20);
     pdf.setFont("helvetica", "bold");
     yPosition = addText("FICHA DO PROGRAMA", margin, yPosition);
@@ -99,7 +127,7 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: Pr
       // Verificar se precisa de nova página
       if (yPosition > 200) {
         pdf.addPage();
-        yPosition = 20;
+        yPosition = addHeader(); // Adicionar cabeçalho na nova página
       }
 
       pdf.setFontSize(16);
@@ -111,7 +139,7 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: Pr
         // Verificar se precisa de nova página para a ação
         if (yPosition > 220) {
           pdf.addPage();
-          yPosition = 20;
+          yPosition = addHeader(); // Adicionar cabeçalho na nova página
         }
 
         pdf.setFontSize(14);
@@ -146,6 +174,7 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: Pr
       pdf.setPage(i);
       pdf.setFontSize(8);
       pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(0, 0, 0);
       pdf.text(`Página ${i} de ${totalPages}`, pageWidth - 30, pdf.internal.pageSize.getHeight() - 10);
       pdf.text("Prefeitura Municipal de Presidente Getúlio", margin, pdf.internal.pageSize.getHeight() - 10);
     }

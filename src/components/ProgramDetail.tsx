@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +34,16 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: Pr
     const contentWidth = pageWidth - 2 * margin;
     let yPosition = 25;
 
+    // Cores da paleta municipal (azul institucional e verde)
+    const colors = {
+      primary: [41, 98, 149],     // Azul institucional
+      secondary: [34, 139, 34],   // Verde municipal
+      accent: [70, 130, 180],     // Azul claro
+      text: [51, 51, 51],         // Cinza escuro
+      lightGray: [245, 245, 245], // Cinza claro para fundos
+      darkBlue: [25, 70, 120]     // Azul escuro
+    };
+
     // Função para adicionar texto com quebra de linha automática
     const addText = (text: string, x: number, y: number, maxWidth?: number, fontSize: number = 10, align: 'left' | 'center' | 'right' = 'left') => {
       pdf.setFontSize(fontSize);
@@ -40,206 +51,277 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: Pr
         const lines = pdf.splitTextToSize(text, maxWidth);
         if (align === 'center') {
           lines.forEach((line: string, index: number) => {
-            pdf.text(line, x + maxWidth / 2, y + (index * fontSize * 0.4), { align: 'center' });
+            pdf.text(line, x + maxWidth / 2, y + (index * fontSize * 0.35), { align: 'center' });
           });
         } else {
           pdf.text(lines, x, y);
         }
-        return y + (lines.length * (fontSize * 0.4));
+        return y + (lines.length * (fontSize * 0.35));
       } else {
         pdf.text(text, x, y, { align });
-        return y + (fontSize * 0.4);
+        return y + (fontSize * 0.35);
       }
     };
 
     // Função para verificar se precisa de nova página
-    const checkNewPage = (neededSpace: number = 25) => {
-      if (yPosition + neededSpace > pageHeight - margin - 15) {
+    const checkNewPage = (neededSpace: number = 30) => {
+      if (yPosition + neededSpace > pageHeight - margin - 20) {
         pdf.addPage();
         yPosition = addHeader();
       }
     };
 
-    // Função para adicionar cabeçalho oficial
+    // Função para adicionar cabeçalho clean e profissional
     const addHeader = () => {
-      // Fundo do cabeçalho
-      pdf.setFillColor(0, 100, 0); // Verde escuro oficial
-      pdf.rect(0, 0, pageWidth, 50, 'F');
+      // Cabeçalho principal com gradiente azul
+      pdf.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+      pdf.rect(0, 0, pageWidth, 35, 'F');
       
-      // Brasão da cidade (simulado com círculo e texto)
-      pdf.setFillColor(255, 255, 255);
-      pdf.circle(30, 25, 15, 'F');
-      pdf.setFillColor(0, 100, 0);
-      pdf.circle(30, 25, 12, 'F');
-      
-      // Estrela no brasão (simulada)
-      pdf.setFillColor(255, 255, 255);
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("★", 30, 27, { align: 'center' });
+      // Linha de destaque verde
+      pdf.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+      pdf.rect(0, 35, pageWidth, 3, 'F');
       
       // Texto do cabeçalho
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(18);
       pdf.setFont("helvetica", "bold");
-      pdf.text("PREFEITURA MUNICIPAL DE PRESIDENTE GETÚLIO", pageWidth / 2, 18, { align: 'center' });
+      pdf.text("PREFEITURA MUNICIPAL DE PRESIDENTE GETÚLIO", pageWidth / 2, 15, { align: 'center' });
       
       pdf.setFontSize(12);
       pdf.setFont("helvetica", "normal");
-      pdf.text("Estado de Santa Catarina", pageWidth / 2, 28, { align: 'center' });
+      pdf.text("Estado de Santa Catarina", pageWidth / 2, 24, { align: 'center' });
       
-      pdf.setFontSize(10);
-      pdf.text("Plano Plurianual 2026-2029 | Sistema de Gestão de Programas", pageWidth / 2, 38, { align: 'center' });
-      
-      // Linha separadora
-      pdf.setDrawColor(255, 255, 255);
-      pdf.setLineWidth(0.5);
-      pdf.line(margin, 45, pageWidth - margin, 45);
+      pdf.setFontSize(9);
+      pdf.text("Plano Plurianual 2026-2029", pageWidth / 2, 31, { align: 'center' });
       
       // Resetar cor do texto
-      pdf.setTextColor(0, 0, 0);
+      pdf.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
       
-      return 60;
+      return 50;
     };
 
     // Adicionar cabeçalho na primeira página
     yPosition = addHeader();
 
-    // Título da ficha em destaque
-    pdf.setFillColor(240, 248, 255);
-    pdf.rect(margin, yPosition - 5, contentWidth, 25, 'F');
-    pdf.setDrawColor(70, 130, 180);
-    pdf.setLineWidth(1);
-    pdf.rect(margin, yPosition - 5, contentWidth, 25);
+    // Título do documento
+    pdf.setFillColor(colors.lightGray[0], colors.lightGray[1], colors.lightGray[2]);
+    pdf.rect(margin, yPosition, contentWidth, 20, 'F');
+    pdf.setDrawColor(colors.accent[0], colors.accent[1], colors.accent[2]);
+    pdf.setLineWidth(0.5);
+    pdf.rect(margin, yPosition, contentWidth, 20);
     
     pdf.setFontSize(16);
     pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(70, 130, 180);
-    yPosition = addText("FICHA TÉCNICA DO PROGRAMA", margin + 5, yPosition + 8, contentWidth - 10, 16, 'center');
+    pdf.setTextColor(colors.darkBlue[0], colors.darkBlue[1], colors.darkBlue[2]);
+    yPosition = addText("FICHA TÉCNICA DO PROGRAMA", margin, yPosition + 12, contentWidth, 16, 'center');
     yPosition += 15;
 
-    // Caixa de informações básicas
-    pdf.setTextColor(0, 0, 0);
-    pdf.setFillColor(248, 250, 252);
-    pdf.rect(margin, yPosition, contentWidth, 40, 'F');
-    pdf.setDrawColor(200, 200, 200);
-    pdf.rect(margin, yPosition, contentWidth, 40);
+    // Dados gerais em layout clean
+    pdf.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+    
+    // Nome do programa em destaque
+    pdf.setFillColor(255, 255, 255);
+    pdf.rect(margin, yPosition, contentWidth, 25, 'F');
+    pdf.setDrawColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+    pdf.setLineWidth(1);
+    pdf.rect(margin, yPosition, contentWidth, 25);
     
     pdf.setFontSize(14);
     pdf.setFont("helvetica", "bold");
-    yPosition = addText(program.programa, margin + 5, yPosition + 10, contentWidth - 10, 14);
-    yPosition += 5;
+    pdf.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+    yPosition = addText(program.programa, margin + 5, yPosition + 8, contentWidth - 10, 14);
+    yPosition += 20;
     
-    pdf.setFontSize(10);
+    // Informações organizacionais em grid
+    const infoBoxHeight = 35;
+    pdf.setFillColor(250, 252, 255);
+    pdf.rect(margin, yPosition, contentWidth, infoBoxHeight, 'F');
+    pdf.setDrawColor(colors.accent[0], colors.accent[1], colors.accent[2]);
+    pdf.setLineWidth(0.3);
+    pdf.rect(margin, yPosition, contentWidth, infoBoxHeight);
+    
+    // Grid de informações 2x2
+    const halfWidth = contentWidth / 2;
+    const quarterHeight = infoBoxHeight / 2;
+    
+    pdf.setFontSize(9);
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(colors.darkBlue[0], colors.darkBlue[1], colors.darkBlue[2]);
+    
+    // Linha superior
+    pdf.text("SECRETARIA:", margin + 5, yPosition + 8);
+    pdf.text("DEPARTAMENTO:", margin + halfWidth + 5, yPosition + 8);
+    
     pdf.setFont("helvetica", "normal");
-    yPosition = addText(`Secretaria: ${program.secretaria || "Não informado"}`, margin + 5, yPosition, contentWidth - 10, 10);
-    yPosition = addText(`Departamento: ${program.departamento || "Não informado"}`, margin + 5, yPosition, contentWidth - 10, 10);
-    yPosition = addText(`Eixo: ${program.eixo || "Não informado"}`, margin + 5, yPosition, contentWidth - 10, 10);
+    pdf.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+    pdf.text(program.secretaria || "Não informado", margin + 5, yPosition + 14);
+    pdf.text(program.departamento || "Não informado", margin + halfWidth + 5, yPosition + 14);
     
+    // Linha inferior
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(colors.darkBlue[0], colors.darkBlue[1], colors.darkBlue[2]);
+    pdf.text("EIXO:", margin + 5, yPosition + 23);
+    pdf.text("DATA DE CRIAÇÃO:", margin + halfWidth + 5, yPosition + 23);
+    
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+    pdf.text(program.eixo || "Não informado", margin + 5, yPosition + 29);
+    pdf.text(program.createdAt.toLocaleDateString('pt-BR'), margin + halfWidth + 5, yPosition + 29);
+    
+    // Orçamento total em destaque
     const totalOrcamento = program.acoes.reduce((total, acao) => total + calculateTotal(acao.orcamento), 0);
-    yPosition = addText(`Data de Criação: ${program.createdAt.toLocaleDateString('pt-BR')} | Orçamento Total: ${totalOrcamento.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, margin + 5, yPosition, contentWidth - 10, 10);
-    yPosition += 15;
+    if (totalOrcamento > 0) {
+      yPosition += infoBoxHeight + 5;
+      pdf.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+      pdf.rect(margin, yPosition, contentWidth, 12, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(11);
+      pdf.text(`ORÇAMENTO TOTAL: ${totalOrcamento.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, pageWidth / 2, yPosition + 8, { align: 'center' });
+      yPosition += 17;
+    } else {
+      yPosition += infoBoxHeight + 10;
+    }
 
-    // Seções do programa com layout melhorado
+    // Seções do programa com layout profissional
     const sections = [
-      { title: "DESCRIÇÃO DO PROGRAMA", content: program.descricao, color: [34, 139, 34] },
-      { title: "JUSTIFICATIVA", content: program.justificativa, color: [255, 140, 0] },
-      { title: "OBJETIVOS", content: program.objetivos, color: [70, 130, 180] },
-      { title: "DIRETRIZES", content: program.diretrizes, color: [148, 0, 211] }
+      { title: "DESCRIÇÃO", content: program.descricao, color: colors.primary },
+      { title: "JUSTIFICATIVA", content: program.justificativa, color: colors.accent },
+      { title: "OBJETIVOS", content: program.objetivos, color: colors.secondary },
+      { title: "DIRETRIZES", content: program.diretrizes, color: colors.darkBlue }
     ];
 
     sections.forEach(section => {
       if (section.content) {
-        checkNewPage(35);
+        checkNewPage(40);
         
-        // Cabeçalho da seção
+        // Cabeçalho da seção com linha colorida
         pdf.setFillColor(section.color[0], section.color[1], section.color[2]);
-        pdf.rect(margin, yPosition, contentWidth, 8, 'F');
-        pdf.setTextColor(255, 255, 255);
+        pdf.rect(margin, yPosition, 5, 8, 'F');
+        
+        pdf.setFillColor(248, 250, 252);
+        pdf.rect(margin + 5, yPosition, contentWidth - 5, 8, 'F');
+        
+        pdf.setTextColor(section.color[0], section.color[1], section.color[2]);
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(11);
-        pdf.text(section.title, margin + 3, yPosition + 5.5);
+        pdf.text(section.title, margin + 8, yPosition + 5.5);
         yPosition += 12;
         
         // Conteúdo da seção
-        pdf.setTextColor(0, 0, 0);
+        pdf.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(9);
         yPosition = addText(section.content, margin + 3, yPosition, contentWidth - 6, 9);
-        yPosition += 8;
+        yPosition += 10;
       }
     });
 
-    // Ações com layout tabular
+    // Ações com layout tabular profissional
     if (program.acoes.length > 0) {
-      checkNewPage(50);
+      checkNewPage(60);
       
       // Cabeçalho das ações
-      pdf.setFillColor(46, 125, 50);
-      pdf.rect(margin, yPosition, contentWidth, 10, 'F');
+      pdf.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+      pdf.rect(margin, yPosition, contentWidth, 12, 'F');
       pdf.setTextColor(255, 255, 255);
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(12);
-      pdf.text(`AÇÕES DO PROGRAMA (${program.acoes.length})`, margin + 3, yPosition + 6.5);
-      yPosition += 15;
+      pdf.text(`AÇÕES DO PROGRAMA (${program.acoes.length})`, margin + 5, yPosition + 8);
+      yPosition += 18;
 
       program.acoes.forEach((acao, index) => {
-        checkNewPage(45);
+        checkNewPage(50);
 
-        // Caixa da ação
-        pdf.setFillColor(index % 2 === 0 ? 250 : 245, 250, 250);
-        pdf.rect(margin, yPosition, contentWidth, 35, 'F');
-        pdf.setDrawColor(200, 200, 200);
-        pdf.rect(margin, yPosition, contentWidth, 35);
+        // Cartão da ação
+        const cardHeight = 40;
+        pdf.setFillColor(index % 2 === 0 ? 255 : 252, 254, 255);
+        pdf.rect(margin, yPosition, contentWidth, cardHeight, 'F');
+        pdf.setDrawColor(colors.accent[0], colors.accent[1], colors.accent[2]);
+        pdf.setLineWidth(0.3);
+        pdf.rect(margin, yPosition, contentWidth, cardHeight);
 
-        pdf.setTextColor(0, 0, 0);
-        pdf.setFontSize(11);
+        // Linha colorida lateral
+        pdf.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+        pdf.rect(margin, yPosition, 3, cardHeight, 'F');
+
+        // Número da ação
+        pdf.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+        pdf.circle(margin + 15, yPosition + 8, 6, 'F');
+        pdf.setTextColor(255, 255, 255);
         pdf.setFont("helvetica", "bold");
-        yPosition = addText(`${index + 1}. ${acao.nome}`, margin + 3, yPosition + 6, contentWidth - 6, 11);
-        yPosition += 3;
+        pdf.setFontSize(10);
+        pdf.text(String(index + 1), margin + 15, yPosition + 10, { align: 'center' });
 
-        pdf.setFontSize(9);
-        pdf.setFont("helvetica", "normal");
+        // Nome da ação
+        pdf.setTextColor(colors.darkBlue[0], colors.darkBlue[1], colors.darkBlue[2]);
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(11);
+        yPosition = addText(acao.nome, margin + 25, yPosition + 10, contentWidth - 30, 11);
         
+        // Detalhes em grid
+        pdf.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(8);
+        
+        let detailY = yPosition + 3;
         if (acao.produto) {
-          yPosition = addText(`Produto: ${acao.produto}`, margin + 6, yPosition, contentWidth - 12, 9);
+          pdf.setFont("helvetica", "bold");
+          pdf.text("Produto:", margin + 25, detailY);
+          pdf.setFont("helvetica", "normal");
+          pdf.text(acao.produto, margin + 45, detailY);
+          detailY += 6;
         }
         
-        yPosition = addText(`Meta Física: ${acao.metaFisica} ${acao.unidadeMedida}`, margin + 6, yPosition, contentWidth - 12, 9);
+        // Grid de informações
+        const col1X = margin + 25;
+        const col2X = margin + (contentWidth / 2) + 10;
+        
+        pdf.setFont("helvetica", "bold");
+        pdf.text("Meta:", col1X, detailY);
+        pdf.setFont("helvetica", "normal");
+        pdf.text(`${acao.metaFisica} ${acao.unidadeMedida}`, col1X + 20, detailY);
         
         if (acao.orcamento) {
-          yPosition = addText(`Orçamento: ${acao.orcamento}`, margin + 6, yPosition, contentWidth - 12, 9);
+          pdf.setFont("helvetica", "bold");
+          pdf.text("Orçamento:", col2X, detailY);
+          pdf.setFont("helvetica", "normal");
+          pdf.text(acao.orcamento, col2X + 30, detailY);
         }
         
+        detailY += 6;
         if (acao.fonte) {
-          yPosition = addText(`Fonte: ${acao.fonte}`, margin + 6, yPosition, contentWidth - 12, 9);
+          pdf.setFont("helvetica", "bold");
+          pdf.text("Fonte:", col1X, detailY);
+          pdf.setFont("helvetica", "normal");
+          pdf.text(acao.fonte, col1X + 20, detailY);
         }
         
-        yPosition += 15;
+        yPosition += cardHeight + 5;
       });
     }
 
-    // Rodapé em todas as páginas
+    // Rodapé profissional
     const totalPages = pdf.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       pdf.setPage(i);
       
-      // Linha separadora do rodapé
-      pdf.setDrawColor(150, 150, 150);
+      // Linha separadora
+      pdf.setDrawColor(colors.accent[0], colors.accent[1], colors.accent[2]);
       pdf.setLineWidth(0.3);
-      pdf.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
+      pdf.line(margin, pageHeight - 20, pageWidth - margin, pageHeight - 20);
       
+      // Texto do rodapé
       pdf.setFontSize(8);
       pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(100, 100, 100);
-      pdf.text(`Página ${i} de ${totalPages}`, pageWidth - 30, pageHeight - 8, { align: 'right' });
-      pdf.text("Prefeitura Municipal de Presidente Getúlio - SC", margin, pageHeight - 8);
-      pdf.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, pageWidth / 2, pageHeight - 8, { align: 'center' });
-      pdf.setTextColor(0, 0, 0);
+      pdf.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+      pdf.text(`Página ${i} de ${totalPages}`, pageWidth - 30, pageHeight - 12, { align: 'right' });
+      pdf.text("Prefeitura Municipal de Presidente Getúlio - SC", margin, pageHeight - 12);
+      pdf.text(`Documento gerado em ${new Date().toLocaleDateString('pt-BR')}`, pageWidth / 2, pageHeight - 12, { align: 'center' });
     }
 
     // Salvar o PDF
-    const fileName = `programa-${program.programa.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.pdf`;
+    const fileName = `ficha-programa-${program.programa.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.pdf`;
     pdf.save(fileName);
   };
 

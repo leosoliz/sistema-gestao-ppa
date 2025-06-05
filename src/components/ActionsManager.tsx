@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Plus, Trash, Edit } from "lucide-react";
 import { Action, Idea } from "@/pages/Index";
 
@@ -51,8 +50,8 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
       return;
     }
 
-    const newAction: Action = {
-      id: Date.now().toString(),
+    const actionToSave: Action = {
+      id: editingIndex !== null ? actions[editingIndex].id : Date.now().toString(),
       nome: currentAction.nome || "",
       produto: currentAction.produto || "",
       unidadeMedida: currentAction.unidadeMedida || "",
@@ -63,11 +62,11 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
 
     if (editingIndex !== null) {
       const updatedActions = [...actions];
-      updatedActions[editingIndex] = newAction;
+      updatedActions[editingIndex] = actionToSave;
       onActionsChange(updatedActions);
       setEditingIndex(null);
     } else {
-      onActionsChange([...actions, newAction]);
+      onActionsChange([...actions, actionToSave]);
     }
 
     // Reset form
@@ -82,8 +81,28 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
   };
 
   const editAction = (index: number) => {
-    setCurrentAction(actions[index]);
+    const action = actions[index];
+    setCurrentAction({
+      nome: action.nome,
+      produto: action.produto,
+      unidadeMedida: action.unidadeMedida,
+      metaFisica: action.metaFisica,
+      orcamento: action.orcamento,
+      fonte: action.fonte,
+    });
     setEditingIndex(index);
+  };
+
+  const cancelEdit = () => {
+    setEditingIndex(null);
+    setCurrentAction({
+      nome: "",
+      produto: "",
+      unidadeMedida: "",
+      metaFisica: "",
+      orcamento: "",
+      fonte: "",
+    });
   };
 
   const deleteAction = (index: number) => {
@@ -114,21 +133,23 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="selectIdea">Selecionar do Banco de Ideias (opcional)</Label>
-            <Select onValueChange={handleSelectIdea}>
-              <SelectTrigger>
-                <SelectValue placeholder="Escolha uma ideia ou crie uma nova ação" />
-              </SelectTrigger>
-              <SelectContent>
-                {ideas.map((idea) => (
-                  <SelectItem key={idea.id} value={idea.id}>
-                    {idea.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {editingIndex === null && (
+            <div>
+              <Label htmlFor="selectIdea">Selecionar do Banco de Ideias (opcional)</Label>
+              <Select onValueChange={handleSelectIdea}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Escolha uma ideia ou crie uma nova ação" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ideas.map((idea) => (
+                    <SelectItem key={idea.id} value={idea.id}>
+                      {idea.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -197,28 +218,17 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
               <Plus className="h-4 w-4 mr-2" />
               {editingIndex !== null ? "Salvar Alterações" : "Adicionar Ação"}
             </Button>
-            <Button 
-              variant="outline" 
-              onClick={saveToIdeasBank}
-              disabled={!currentAction.nome?.trim()}
-            >
-              Salvar no Banco de Ideias
-            </Button>
-            {editingIndex !== null && (
+            {editingIndex === null && (
               <Button 
                 variant="outline" 
-                onClick={() => {
-                  setEditingIndex(null);
-                  setCurrentAction({
-                    nome: "",
-                    produto: "",
-                    unidadeMedida: "",
-                    metaFisica: "",
-                    orcamento: "",
-                    fonte: "",
-                  });
-                }}
+                onClick={saveToIdeasBank}
+                disabled={!currentAction.nome?.trim()}
               >
+                Salvar no Banco de Ideias
+              </Button>
+            )}
+            {editingIndex !== null && (
+              <Button variant="outline" onClick={cancelEdit}>
                 Cancelar
               </Button>
             )}
@@ -258,6 +268,7 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
                         size="sm"
                         variant="outline"
                         onClick={() => editAction(index)}
+                        disabled={editingIndex !== null}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -265,6 +276,7 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
                         size="sm"
                         variant="destructive"
                         onClick={() => deleteAction(index)}
+                        disabled={editingIndex !== null}
                       >
                         <Trash className="h-4 w-4" />
                       </Button>

@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Edit, Calendar, FileText, Target, Lightbulb, Printer } from "lucide-react";
 import { Program, Idea } from "@/pages/Index";
@@ -23,18 +22,29 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: Pr
   const generatePDF = () => {
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
-    const margin = 20;
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 15;
+    const contentWidth = pageWidth - 2 * margin;
     let yPosition = 20;
 
-    // Função para adicionar texto com quebra de linha
-    const addText = (text: string, x: number, y: number, maxWidth?: number) => {
+    // Função para adicionar texto com quebra de linha automática
+    const addText = (text: string, x: number, y: number, maxWidth?: number, fontSize: number = 10) => {
+      pdf.setFontSize(fontSize);
       if (maxWidth) {
         const lines = pdf.splitTextToSize(text, maxWidth);
         pdf.text(lines, x, y);
-        return y + (lines.length * 6);
+        return y + (lines.length * (fontSize * 0.4));
       } else {
         pdf.text(text, x, y);
-        return y + 6;
+        return y + (fontSize * 0.4);
+      }
+    };
+
+    // Função para verificar se precisa de nova página
+    const checkNewPage = (neededSpace: number = 20) => {
+      if (yPosition + neededSpace > pageHeight - margin) {
+        pdf.addPage();
+        yPosition = addHeader();
       }
     };
 
@@ -42,160 +52,130 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: Pr
     const addHeader = () => {
       // Adicionar retângulo de fundo verde
       pdf.setFillColor(34, 197, 94); // green-500
-      pdf.rect(0, 0, pageWidth, 50, 'F');
+      pdf.rect(0, 0, pageWidth, 40, 'F');
       
-      // Adicionar logo da prefeitura
-      try {
-        const logoImg = new Image();
-        logoImg.src = '/lovable-uploads/e00a40bf-e999-462e-bf44-4324f7b7e85f.png';
-        logoImg.onload = () => {
-          // Adicionar logo no lado esquerdo
-          pdf.addImage(logoImg, 'PNG', margin, 8, 25, 25);
-        };
-      } catch (error) {
-        console.log('Erro ao carregar logo:', error);
-      }
+      // Adicionar logo da prefeitura (simulado com um círculo)
+      pdf.setFillColor(255, 255, 255);
+      pdf.circle(25, 20, 12, 'F');
+      pdf.setTextColor(34, 197, 94);
+      pdf.setFontSize(8);
+      pdf.text("LOGO", 20, 22, { align: 'center' });
       
       // Adicionar texto do cabeçalho em branco
       pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(24);
+      pdf.setFontSize(16);
       pdf.setFont("helvetica", "bold");
-      pdf.text("PREFEITURA MUNICIPAL", pageWidth / 2, 18, { align: 'center' });
+      pdf.text("PREFEITURA MUNICIPAL", pageWidth / 2, 15, { align: 'center' });
       
-      pdf.setFontSize(18);
-      pdf.text("DE PRESIDENTE GETÚLIO", pageWidth / 2, 28, { align: 'center' });
-      
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "normal");
-      pdf.text("Sistema de Gestão de Programas", pageWidth / 2, 38, { align: 'center' });
+      pdf.setFontSize(14);
+      pdf.text("DE PRESIDENTE GETÚLIO", pageWidth / 2, 22, { align: 'center' });
       
       pdf.setFontSize(10);
-      pdf.text("PPA 2026 - 2029", pageWidth / 2, 45, { align: 'center' });
+      pdf.setFont("helvetica", "normal");
+      pdf.text("Sistema de Gestão de Programas - PPA 2026-2029", pageWidth / 2, 30, { align: 'center' });
       
       // Resetar cor do texto para preto
       pdf.setTextColor(0, 0, 0);
       
-      return 60; // Retorna a próxima posição Y após o cabeçalho
+      return 50; // Retorna a próxima posição Y após o cabeçalho
     };
 
     // Adicionar cabeçalho na primeira página
     yPosition = addHeader();
 
     // Título da ficha
-    pdf.setFontSize(20);
-    pdf.setFont("helvetica", "bold");
-    yPosition = addText("FICHA DO PROGRAMA", margin, yPosition);
-    yPosition += 10;
-
-    // Informações básicas do programa
     pdf.setFontSize(16);
     pdf.setFont("helvetica", "bold");
-    yPosition = addText(`Programa: ${program.programa}`, margin, yPosition);
+    yPosition = addText("FICHA DO PROGRAMA", margin, yPosition, contentWidth, 16);
+    yPosition += 8;
+
+    // Informações básicas do programa
+    pdf.setFontSize(14);
+    pdf.setFont("helvetica", "bold");
+    yPosition = addText(`${program.programa}`, margin, yPosition, contentWidth, 14);
     yPosition += 5;
 
-    pdf.setFontSize(12);
+    pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
-    yPosition = addText(`Secretaria: ${program.secretaria || "Não informado"}`, margin, yPosition);
-    yPosition = addText(`Departamento: ${program.departamento || "Não informado"}`, margin, yPosition);
-    yPosition = addText(`Eixo: ${program.eixo || "Não informado"}`, margin, yPosition);
-    yPosition = addText(`Data de Criação: ${program.createdAt.toLocaleDateString('pt-BR')}`, margin, yPosition);
-    yPosition += 10;
+    yPosition = addText(`Secretaria: ${program.secretaria || "Não informado"}`, margin, yPosition, contentWidth, 10);
+    yPosition = addText(`Departamento: ${program.departamento || "Não informado"}`, margin, yPosition, contentWidth, 10);
+    yPosition = addText(`Eixo: ${program.eixo || "Não informado"}`, margin, yPosition, contentWidth, 10);
+    yPosition = addText(`Data de Criação: ${program.createdAt.toLocaleDateString('pt-BR')}`, margin, yPosition, contentWidth, 10);
+    yPosition += 8;
 
-    // Descrição
-    if (program.descricao) {
-      pdf.setFont("helvetica", "bold");
-      yPosition = addText("DESCRIÇÃO:", margin, yPosition);
-      pdf.setFont("helvetica", "normal");
-      yPosition = addText(program.descricao, margin, yPosition, pageWidth - 2 * margin);
-      yPosition += 5;
-    }
+    // Seções do programa
+    const sections = [
+      { title: "DESCRIÇÃO", content: program.descricao },
+      { title: "JUSTIFICATIVA", content: program.justificativa },
+      { title: "OBJETIVOS", content: program.objetivos },
+      { title: "DIRETRIZES", content: program.diretrizes }
+    ];
 
-    // Justificativa
-    if (program.justificativa) {
-      pdf.setFont("helvetica", "bold");
-      yPosition = addText("JUSTIFICATIVA:", margin, yPosition);
-      pdf.setFont("helvetica", "normal");
-      yPosition = addText(program.justificativa, margin, yPosition, pageWidth - 2 * margin);
-      yPosition += 5;
-    }
-
-    // Objetivos
-    if (program.objetivos) {
-      pdf.setFont("helvetica", "bold");
-      yPosition = addText("OBJETIVOS:", margin, yPosition);
-      pdf.setFont("helvetica", "normal");
-      yPosition = addText(program.objetivos, margin, yPosition, pageWidth - 2 * margin);
-      yPosition += 5;
-    }
-
-    // Diretrizes
-    if (program.diretrizes) {
-      pdf.setFont("helvetica", "bold");
-      yPosition = addText("DIRETRIZES:", margin, yPosition);
-      pdf.setFont("helvetica", "normal");
-      yPosition = addText(program.diretrizes, margin, yPosition, pageWidth - 2 * margin);
-      yPosition += 10;
-    }
+    sections.forEach(section => {
+      if (section.content) {
+        checkNewPage(30);
+        pdf.setFont("helvetica", "bold");
+        yPosition = addText(`${section.title}:`, margin, yPosition, contentWidth, 10);
+        yPosition += 2;
+        pdf.setFont("helvetica", "normal");
+        yPosition = addText(section.content, margin, yPosition, contentWidth, 9);
+        yPosition += 6;
+      }
+    });
 
     // Ações
     if (program.acoes.length > 0) {
-      // Verificar se precisa de nova página
-      if (yPosition > 200) {
-        pdf.addPage();
-        yPosition = addHeader(); // Adicionar cabeçalho na nova página
-      }
-
-      pdf.setFontSize(16);
+      checkNewPage(40);
+      
+      pdf.setFontSize(12);
       pdf.setFont("helvetica", "bold");
-      yPosition = addText(`AÇÕES CADASTRADAS (${program.acoes.length})`, margin, yPosition);
-      yPosition += 10;
+      yPosition = addText(`AÇÕES CADASTRADAS (${program.acoes.length})`, margin, yPosition, contentWidth, 12);
+      yPosition += 8;
 
       program.acoes.forEach((acao, index) => {
-        // Verificar se precisa de nova página para a ação
-        if (yPosition > 220) {
-          pdf.addPage();
-          yPosition = addHeader(); // Adicionar cabeçalho na nova página
-        }
+        checkNewPage(35);
 
-        pdf.setFontSize(14);
+        pdf.setFontSize(11);
         pdf.setFont("helvetica", "bold");
-        yPosition = addText(`${index + 1}. ${acao.nome}`, margin, yPosition);
-        yPosition += 5;
+        yPosition = addText(`${index + 1}. ${acao.nome}`, margin, yPosition, contentWidth, 11);
+        yPosition += 4;
 
-        pdf.setFontSize(10);
+        pdf.setFontSize(9);
         pdf.setFont("helvetica", "normal");
         
         if (acao.produto) {
-          yPosition = addText(`Produto: ${acao.produto}`, margin + 5, yPosition);
+          yPosition = addText(`Produto: ${acao.produto}`, margin + 5, yPosition, contentWidth - 5, 9);
         }
         
-        yPosition = addText(`Meta Física: ${acao.metaFisica} ${acao.unidadeMedida}`, margin + 5, yPosition);
+        yPosition = addText(`Meta Física: ${acao.metaFisica} ${acao.unidadeMedida}`, margin + 5, yPosition, contentWidth - 5, 9);
         
         if (acao.orcamento) {
-          yPosition = addText(`Orçamento: ${acao.orcamento}`, margin + 5, yPosition);
+          yPosition = addText(`Orçamento: ${acao.orcamento}`, margin + 5, yPosition, contentWidth - 5, 9);
         }
         
         if (acao.fonte) {
-          yPosition = addText(`Fonte: ${acao.fonte}`, margin + 5, yPosition);
+          yPosition = addText(`Fonte: ${acao.fonte}`, margin + 5, yPosition, contentWidth - 5, 9);
         }
         
-        yPosition += 8;
+        yPosition += 6;
       });
     }
 
-    // Rodapé
+    // Rodapé em todas as páginas
     const totalPages = pdf.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       pdf.setPage(i);
       pdf.setFontSize(8);
       pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(128, 128, 128);
+      pdf.text(`Página ${i} de ${totalPages}`, pageWidth - 30, pageHeight - 8);
+      pdf.text("Prefeitura Municipal de Presidente Getúlio", margin, pageHeight - 8);
       pdf.setTextColor(0, 0, 0);
-      pdf.text(`Página ${i} de ${totalPages}`, pageWidth - 30, pdf.internal.pageSize.getHeight() - 10);
-      pdf.text("Prefeitura Municipal de Presidente Getúlio", margin, pdf.internal.pageSize.getHeight() - 10);
     }
 
     // Salvar o PDF
-    pdf.save(`programa-${program.programa.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.pdf`);
+    const fileName = `programa-${program.programa.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.pdf`;
+    pdf.save(fileName);
   };
 
   if (isEditing) {

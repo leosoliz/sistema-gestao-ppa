@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,8 +25,36 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
   });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
+  const formatCurrency = (value: string) => {
+    // Remove todos os caracteres não numéricos
+    const numbers = value.replace(/\D/g, '');
+    
+    // Converte para centavos
+    const cents = parseInt(numbers) || 0;
+    
+    // Converte para reais
+    const reais = cents / 100;
+    
+    // Formata como moeda brasileira
+    return reais.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    });
+  };
+
+  const parseCurrency = (formattedValue: string) => {
+    // Remove formatação e retorna apenas números com duas casas decimais
+    const numbers = formattedValue.replace(/[^\d,]/g, '').replace(',', '.');
+    return parseFloat(numbers) || 0;
+  };
+
   const handleInputChange = (field: keyof Action, value: string) => {
-    setCurrentAction(prev => ({ ...prev, [field]: value }));
+    if (field === 'orcamento') {
+      const formattedValue = formatCurrency(value);
+      setCurrentAction(prev => ({ ...prev, [field]: formattedValue }));
+    } else {
+      setCurrentAction(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleSelectIdea = (ideaId: string) => {
@@ -193,12 +220,12 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
             </div>
             
             <div>
-              <Label htmlFor="orcamento">Orçamento</Label>
+              <Label htmlFor="orcamento">Orçamento (R$)</Label>
               <Input
                 id="orcamento"
                 value={currentAction.orcamento || ""}
                 onChange={(e) => handleInputChange("orcamento", e.target.value)}
-                placeholder="Valor do orçamento"
+                placeholder="R$ 0,00"
               />
             </div>
             

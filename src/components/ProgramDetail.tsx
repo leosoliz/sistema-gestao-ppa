@@ -42,25 +42,40 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: Pr
     const addHeader = () => {
       // Adicionar retângulo de fundo verde
       pdf.setFillColor(34, 197, 94); // green-500
-      pdf.rect(0, 0, pageWidth, 40, 'F');
+      pdf.rect(0, 0, pageWidth, 50, 'F');
+      
+      // Adicionar logo da prefeitura
+      try {
+        const logoImg = new Image();
+        logoImg.src = '/lovable-uploads/e00a40bf-e999-462e-bf44-4324f7b7e85f.png';
+        logoImg.onload = () => {
+          // Adicionar logo no lado esquerdo
+          pdf.addImage(logoImg, 'PNG', margin, 8, 25, 25);
+        };
+      } catch (error) {
+        console.log('Erro ao carregar logo:', error);
+      }
       
       // Adicionar texto do cabeçalho em branco
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(24);
       pdf.setFont("helvetica", "bold");
-      pdf.text("PREFEITURA MUNICIPAL", pageWidth / 2, 15, { align: 'center' });
+      pdf.text("PREFEITURA MUNICIPAL", pageWidth / 2, 18, { align: 'center' });
       
       pdf.setFontSize(18);
-      pdf.text("DE PRESIDENTE GETÚLIO", pageWidth / 2, 25, { align: 'center' });
+      pdf.text("DE PRESIDENTE GETÚLIO", pageWidth / 2, 28, { align: 'center' });
       
       pdf.setFontSize(12);
       pdf.setFont("helvetica", "normal");
-      pdf.text("Sistema de Gestão de Programas", pageWidth / 2, 35, { align: 'center' });
+      pdf.text("Sistema de Gestão de Programas", pageWidth / 2, 38, { align: 'center' });
+      
+      pdf.setFontSize(10);
+      pdf.text("PPA 2026 - 2029", pageWidth / 2, 45, { align: 'center' });
       
       // Resetar cor do texto para preto
       pdf.setTextColor(0, 0, 0);
       
-      return 50; // Retorna a próxima posição Y após o cabeçalho
+      return 60; // Retorna a próxima posição Y após o cabeçalho
     };
 
     // Adicionar cabeçalho na primeira página

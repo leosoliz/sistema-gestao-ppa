@@ -9,7 +9,116 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      actions: {
+        Row: {
+          created_at: string
+          fonte: string | null
+          id: string
+          meta_fisica: string
+          nome: string
+          orcamento: string | null
+          produto: string | null
+          program_id: string
+          unidade_medida: string
+        }
+        Insert: {
+          created_at?: string
+          fonte?: string | null
+          id?: string
+          meta_fisica: string
+          nome: string
+          orcamento?: string | null
+          produto?: string | null
+          program_id: string
+          unidade_medida: string
+        }
+        Update: {
+          created_at?: string
+          fonte?: string | null
+          id?: string
+          meta_fisica?: string
+          nome?: string
+          orcamento?: string | null
+          produto?: string | null
+          program_id?: string
+          unidade_medida?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "actions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ideas: {
+        Row: {
+          categoria: string | null
+          created_at: string
+          descricao: string | null
+          id: string
+          titulo: string
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          titulo: string
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          titulo?: string
+        }
+        Relationships: []
+      }
+      programs: {
+        Row: {
+          created_at: string
+          departamento: string | null
+          descricao: string | null
+          diretrizes: string | null
+          eixo: string | null
+          id: string
+          justificativa: string | null
+          objetivos: string | null
+          programa: string
+          secretaria: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          departamento?: string | null
+          descricao?: string | null
+          diretrizes?: string | null
+          eixo?: string | null
+          id?: string
+          justificativa?: string | null
+          objetivos?: string | null
+          programa: string
+          secretaria?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          departamento?: string | null
+          descricao?: string | null
+          diretrizes?: string | null
+          eixo?: string | null
+          id?: string
+          justificativa?: string | null
+          objetivos?: string | null
+          programa?: string
+          secretaria?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

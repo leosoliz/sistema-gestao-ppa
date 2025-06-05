@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, FileText, Lightbulb, Eye } from "lucide-react";
@@ -8,7 +7,8 @@ import { ProgramForm } from "@/components/ProgramForm";
 import { ProgramList } from "@/components/ProgramList";
 import { IdeasBank } from "@/components/IdeasBank";
 import { ProgramDetail } from "@/components/ProgramDetail";
-import { useToast } from "@/hooks/use-toast";
+import { usePrograms } from "@/hooks/usePrograms";
+import { useIdeas } from "@/hooks/useIdeas";
 
 export interface Action {
   id: string;
@@ -44,71 +44,32 @@ export interface Idea {
 }
 
 const Index = () => {
-  const [programs, setPrograms] = useState<Program[]>([]);
-  const [ideas, setIdeas] = useState<Idea[]>([]);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
-  const { toast } = useToast();
-
-  const addProgram = (program: Omit<Program, "id" | "createdAt">) => {
-    const newProgram: Program = {
-      ...program,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-    };
-    setPrograms([...programs, newProgram]);
-    toast({
-      title: "Programa cadastrado",
-      description: "O programa foi cadastrado com sucesso!",
-    });
-  };
-
-  const updateProgram = (updatedProgram: Program) => {
-    setPrograms(programs.map(p => p.id === updatedProgram.id ? updatedProgram : p));
-    setSelectedProgram(updatedProgram);
-    toast({
-      title: "Programa atualizado",
-      description: "As alterações foram salvas com sucesso!",
-    });
-  };
-
-  const deleteProgram = (programId: string) => {
-    setPrograms(programs.filter(p => p.id !== programId));
-    if (selectedProgram?.id === programId) {
-      setSelectedProgram(null);
-      setActiveTab("dashboard");
-    }
-    toast({
-      title: "Programa excluído",
-      description: "O programa foi removido com sucesso!",
-    });
-  };
-
-  const addIdea = (idea: Omit<Idea, "id" | "createdAt">) => {
-    const newIdea: Idea = {
-      ...idea,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-    };
-    setIdeas([...ideas, newIdea]);
-    toast({
-      title: "Ideia cadastrada",
-      description: "A ideia foi adicionada ao banco de ideias!",
-    });
-  };
-
-  const deleteIdea = (ideaId: string) => {
-    setIdeas(ideas.filter(i => i.id !== ideaId));
-    toast({
-      title: "Ideia removida",
-      description: "A ideia foi removida do banco de ideias!",
-    });
-  };
+  
+  const { programs, loading: programsLoading, addProgram, updateProgram, deleteProgram } = usePrograms();
+  const { ideas, loading: ideasLoading, addIdea, deleteIdea } = useIdeas();
 
   const viewProgram = (program: Program) => {
     setSelectedProgram(program);
     setActiveTab("view");
   };
+
+  const handleUpdateProgram = (updatedProgram: Program) => {
+    updateProgram(updatedProgram);
+    setSelectedProgram(updatedProgram);
+  };
+
+  if (programsLoading || ideasLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-blue-600">Carregando dados...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -245,7 +206,7 @@ const Index = () => {
               <ProgramDetail 
                 program={selectedProgram}
                 ideas={ideas}
-                onUpdate={updateProgram}
+                onUpdate={handleUpdateProgram}
                 onAddToIdeasBank={addIdea}
               />
             )}

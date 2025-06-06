@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -98,7 +97,7 @@ const Index = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-white/50 backdrop-blur">
+          <TabsList className="grid w-full grid-cols-5 bg-white/50 backdrop-blur">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Dashboard
@@ -114,6 +113,10 @@ const Index = () => {
             <TabsTrigger value="view" className="flex items-center gap-2" disabled={!selectedProgram}>
               <Eye className="h-4 w-4" />
               Visualizar
+            </TabsTrigger>
+            <TabsTrigger value="configuracoes" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Configurações
             </TabsTrigger>
           </TabsList>
 
@@ -211,6 +214,10 @@ const Index = () => {
                 onAddToIdeasBank={addIdea}
               />
             )}
+          </TabsContent>
+
+          <TabsContent value="configuracoes">
+            <EixosManager />
           </TabsContent>
         </Tabs>
       </main>

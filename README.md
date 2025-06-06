@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# Sistema de Cadastro de Programas Para PPA
 
 ## Project info
 

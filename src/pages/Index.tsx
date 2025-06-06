@@ -2,11 +2,12 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, FileText, Lightbulb, Eye } from "lucide-react";
+import { Plus, FileText, Lightbulb, Eye, Settings } from "lucide-react";
 import { ProgramForm } from "@/components/ProgramForm";
 import { ProgramList } from "@/components/ProgramList";
 import { IdeasBank } from "@/components/IdeasBank";
 import { ProgramDetail } from "@/components/ProgramDetail";
+import { EixosManager } from "@/components/EixosManager";
 import { usePrograms } from "@/hooks/usePrograms";
 import { useIdeas } from "@/hooks/useIdeas";
 

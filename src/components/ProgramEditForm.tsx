@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,8 +5,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Plus } from "lucide-react";
 import { ActionsManager } from "./ActionsManager";
+import { EixoForm } from "./EixoForm";
 import { Program, Action, Idea } from "@/pages/Index";
+import { Eixo } from "@/types/eixo";
+import { useEixos } from "@/hooks/useEixos";
 
 interface ProgramEditFormProps {
   program: Program;
@@ -30,9 +35,26 @@ export const ProgramEditForm = ({ program, ideas, onUpdate, onAddToIdeasBank, on
   });
   
   const [acoes, setAcoes] = useState<Action[]>(program.acoes);
+  const [isEixoDialogOpen, setIsEixoDialogOpen] = useState(false);
+  
+  const { eixos, addEixo } = useEixos();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleEixoSelect = (value: string) => {
+    if (value === "novo") {
+      setIsEixoDialogOpen(true);
+    } else {
+      handleInputChange("eixo", value);
+    }
+  };
+
+  const handleNewEixo = async (eixoData: Omit<Eixo, "id" | "createdAt">) => {
+    await addEixo(eixoData);
+    setFormData(prev => ({ ...prev, eixo: eixoData.nome }));
+    setIsEixoDialogOpen(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -84,12 +106,32 @@ export const ProgramEditForm = ({ program, ideas, onUpdate, onAddToIdeasBank, on
               
               <div>
                 <Label htmlFor="eixo">Eixo</Label>
-                <Input
-                  id="eixo"
-                  value={formData.eixo}
-                  onChange={(e) => handleInputChange("eixo", e.target.value)}
-                  placeholder="Ex: Habitação e Bem estar"
-                />
+                <div className="flex gap-2">
+                  <Select value={formData.eixo} onValueChange={handleEixoSelect}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Selecione um eixo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {eixos.map((eixo) => (
+                        <SelectItem key={eixo.id} value={eixo.nome}>
+                          {eixo.nome}
+                        </SelectItem>
+                      ))}
+                      <Separator className="my-1" />
+                      <SelectItem value="novo" className="text-blue-600">
+                        <div className="flex items-center gap-2">
+                          <Plus className="h-4 w-4" />
+                          Criar novo eixo
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {formData.eixo && (
+                  <div className="mt-1 text-sm text-gray-600">
+                    Eixo selecionado: {formData.eixo}
+                  </div>
+                )}
               </div>
               
               <div>
@@ -178,6 +220,19 @@ export const ProgramEditForm = ({ program, ideas, onUpdate, onAddToIdeasBank, on
             </Button>
           </div>
         </form>
+
+        <Dialog open={isEixoDialogOpen} onOpenChange={setIsEixoDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Criar Novo Eixo</DialogTitle>
+            </DialogHeader>
+            <EixoForm 
+              onSubmit={handleNewEixo}
+              onCancel={() => setIsEixoDialogOpen(false)}
+              isEditing={false}
+            />
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, FileText, Lightbulb, Eye, Settings } from "lucide-react";
+import { Plus, FileText, Lightbulb, Eye, Target } from "lucide-react";
 import { ProgramForm } from "@/components/ProgramForm";
 import { ProgramList } from "@/components/ProgramList";
 import { IdeasBank } from "@/components/IdeasBank";
@@ -9,6 +9,7 @@ import { ProgramDetail } from "@/components/ProgramDetail";
 import { EixosManager } from "@/components/EixosManager";
 import { usePrograms } from "@/hooks/usePrograms";
 import { useIdeas } from "@/hooks/useIdeas";
+import { useEixos } from "@/hooks/useEixos";
 
 export interface Action {
   id: string;
@@ -49,6 +50,7 @@ const Index = () => {
   
   const { programs, loading: programsLoading, addProgram, updateProgram, deleteProgram } = usePrograms();
   const { ideas, loading: ideasLoading, addIdea, deleteIdea } = useIdeas();
+  const { eixos, loading: eixosLoading } = useEixos();
 
   const viewProgram = (program: Program) => {
     setSelectedProgram(program);
@@ -60,7 +62,7 @@ const Index = () => {
     setSelectedProgram(updatedProgram);
   };
 
-  if (programsLoading || ideasLoading) {
+  if (programsLoading || ideasLoading || eixosLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
         <div className="text-center">
@@ -115,13 +117,13 @@ const Index = () => {
               Visualizar
             </TabsTrigger>
             <TabsTrigger value="configuracoes" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Configurações
+              <Target className="h-4 w-4" />
+              Eixos Temáticos
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg">Total de Programas</CardTitle>
@@ -148,6 +150,15 @@ const Index = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-3xl font-bold">{ideas.length}</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Eixos Temáticos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold">{eixos.length}</p>
                 </CardContent>
               </Card>
             </div>

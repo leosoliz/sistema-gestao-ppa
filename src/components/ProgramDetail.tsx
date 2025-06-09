@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,14 +33,14 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: Pr
     const contentWidth = pageWidth - 2 * margin;
     let yPosition = 25;
 
-    // Cores da paleta municipal (azul institucional e verde)
+    // Cores baseadas no modelo oficial
     const colors = {
-      primary: [41, 98, 149],     // Azul institucional
-      secondary: [34, 139, 34],   // Verde municipal
-      accent: [70, 130, 180],     // Azul claro
-      text: [51, 51, 51],         // Cinza escuro
-      lightGray: [245, 245, 245], // Cinza claro para fundos
-      darkBlue: [25, 70, 120]     // Azul escuro
+      primary: [51, 51, 51],        // Cinza escuro para texto principal
+      secondary: [102, 102, 102],   // Cinza médio
+      accent: [153, 153, 153],      // Cinza claro
+      text: [51, 51, 51],          // Cinza escuro
+      lightGray: [245, 245, 245],  // Cinza muito claro
+      border: [204, 204, 204]      // Cinza para bordas
     };
 
     // Função para adicionar texto com quebra de linha automática
@@ -65,147 +64,151 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: Pr
 
     // Função para verificar se precisa de nova página
     const checkNewPage = (neededSpace: number = 30) => {
-      if (yPosition + neededSpace > pageHeight - margin - 20) {
+      if (yPosition + neededSpace > pageHeight - margin - 40) {
         pdf.addPage();
         yPosition = addHeader();
       }
     };
 
-    // Função para adicionar cabeçalho clean e profissional
+    // Função para adicionar cabeçalho baseado no modelo oficial
     const addHeader = () => {
-      // Cabeçalho principal com gradiente azul
-      pdf.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-      pdf.rect(0, 0, pageWidth, 35, 'F');
+      // Brasão (placeholder - posicionado onde seria o brasão no modelo)
+      const brasaoSize = 25;
+      pdf.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
+      pdf.setLineWidth(0.5);
+      pdf.rect(margin, 15, brasaoSize, brasaoSize);
       
-      // Linha de destaque verde
-      pdf.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
-      pdf.rect(0, 35, pageWidth, 3, 'F');
+      // Placeholder para o brasão
+      pdf.setFontSize(8);
+      pdf.setTextColor(colors.accent[0], colors.accent[1], colors.accent[2]);
+      pdf.text("BRASÃO", margin + brasaoSize/2, 27, { align: 'center' });
       
-      // Texto do cabeçalho
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(18);
+      // Cabeçalho principal do município
+      const headerStartX = margin + brasaoSize + 10;
+      const headerWidth = contentWidth - brasaoSize - 10;
+      
+      pdf.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
       pdf.setFont("helvetica", "bold");
-      pdf.text("PREFEITURA MUNICIPAL DE PRESIDENTE GETÚLIO", pageWidth / 2, 15, { align: 'center' });
       
-      pdf.setFontSize(12);
+      // MUNICÍPIO DE PRESIDENTE GETÚLIO
+      pdf.setFontSize(14);
+      let currentY = addText("MUNICÍPIO DE PRESIDENTE GETÚLIO", headerStartX, 22, headerWidth, 14, 'center');
+      
+      // ESTADO DE SANTA CATARINA
+      pdf.setFontSize(11);
+      currentY = addText("ESTADO DE SANTA CATARINA", headerStartX, currentY + 2, headerWidth, 11, 'center');
+      
+      // Poder Executivo Municipal
       pdf.setFont("helvetica", "normal");
-      pdf.text("Estado de Santa Catarina", pageWidth / 2, 24, { align: 'center' });
+      pdf.setFontSize(10);
+      currentY = addText("Poder Executivo Municipal", headerStartX, currentY + 2, headerWidth, 10, 'center');
       
-      pdf.setFontSize(9);
-      pdf.text("Plano Plurianual 2026-2029", pageWidth / 2, 31, { align: 'center' });
+      // Linha separadora
+      pdf.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
+      pdf.setLineWidth(0.5);
+      pdf.line(margin, 50, pageWidth - margin, 50);
       
-      // Resetar cor do texto
+      // Resetar cor do texto para o corpo
       pdf.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
       
-      return 50;
+      return 65; // Retorna a posição Y após o cabeçalho
     };
 
     // Adicionar cabeçalho na primeira página
     yPosition = addHeader();
 
     // Título do documento
-    pdf.setFillColor(colors.lightGray[0], colors.lightGray[1], colors.lightGray[2]);
-    pdf.rect(margin, yPosition, contentWidth, 20, 'F');
-    pdf.setDrawColor(colors.accent[0], colors.accent[1], colors.accent[2]);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(16);
+    pdf.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+    yPosition = addText("FICHA TÉCNICA DO PROGRAMA", margin, yPosition + 10, contentWidth, 16, 'center');
+    yPosition += 20;
+
+    // Nome do programa em destaque
+    pdf.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
     pdf.setLineWidth(0.5);
     pdf.rect(margin, yPosition, contentWidth, 20);
-    
-    pdf.setFontSize(16);
-    pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(colors.darkBlue[0], colors.darkBlue[1], colors.darkBlue[2]);
-    yPosition = addText("FICHA TÉCNICA DO PROGRAMA", margin, yPosition + 12, contentWidth, 16, 'center');
-    yPosition += 15;
-
-    // Dados gerais em layout clean
-    pdf.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
-    
-    // Nome do programa em destaque
-    pdf.setFillColor(255, 255, 255);
-    pdf.rect(margin, yPosition, contentWidth, 25, 'F');
-    pdf.setDrawColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-    pdf.setLineWidth(1);
-    pdf.rect(margin, yPosition, contentWidth, 25);
     
     pdf.setFontSize(14);
     pdf.setFont("helvetica", "bold");
     pdf.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-    yPosition = addText(program.programa, margin + 5, yPosition + 8, contentWidth - 10, 14);
-    yPosition += 20;
+    yPosition = addText(program.programa, margin + 5, yPosition + 12, contentWidth - 10, 14, 'center');
+    yPosition += 15;
     
     // Informações organizacionais em grid
     const infoBoxHeight = 35;
-    pdf.setFillColor(250, 252, 255);
-    pdf.rect(margin, yPosition, contentWidth, infoBoxHeight, 'F');
-    pdf.setDrawColor(colors.accent[0], colors.accent[1], colors.accent[2]);
+    pdf.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
     pdf.setLineWidth(0.3);
     pdf.rect(margin, yPosition, contentWidth, infoBoxHeight);
     
     // Grid de informações 2x2
     const halfWidth = contentWidth / 2;
-    const quarterHeight = infoBoxHeight / 2;
+    
+    // Linha vertical divisória
+    pdf.line(margin + halfWidth, yPosition, margin + halfWidth, yPosition + infoBoxHeight);
+    // Linha horizontal divisória
+    pdf.line(margin, yPosition + infoBoxHeight/2, margin + contentWidth, yPosition + infoBoxHeight/2);
     
     pdf.setFontSize(9);
     pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(colors.darkBlue[0], colors.darkBlue[1], colors.darkBlue[2]);
+    pdf.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
     
     // Linha superior
-    pdf.text("SECRETARIA:", margin + 5, yPosition + 8);
-    pdf.text("DEPARTAMENTO:", margin + halfWidth + 5, yPosition + 8);
+    pdf.text("SECRETARIA:", margin + 3, yPosition + 8);
+    pdf.text("DEPARTAMENTO:", margin + halfWidth + 3, yPosition + 8);
     
     pdf.setFont("helvetica", "normal");
     pdf.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
-    pdf.text(program.secretaria || "Não informado", margin + 5, yPosition + 14);
-    pdf.text(program.departamento || "Não informado", margin + halfWidth + 5, yPosition + 14);
+    pdf.text(program.secretaria || "Não informado", margin + 3, yPosition + 14);
+    pdf.text(program.departamento || "Não informado", margin + halfWidth + 3, yPosition + 14);
     
     // Linha inferior
     pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(colors.darkBlue[0], colors.darkBlue[1], colors.darkBlue[2]);
-    pdf.text("EIXO:", margin + 5, yPosition + 23);
-    pdf.text("DATA DE CRIAÇÃO:", margin + halfWidth + 5, yPosition + 23);
+    pdf.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+    pdf.text("EIXO TEMÁTICO:", margin + 3, yPosition + 23);
+    pdf.text("DATA DE CRIAÇÃO:", margin + halfWidth + 3, yPosition + 23);
     
     pdf.setFont("helvetica", "normal");
     pdf.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
-    pdf.text(program.eixo || "Não informado", margin + 5, yPosition + 29);
-    pdf.text(program.createdAt.toLocaleDateString('pt-BR'), margin + halfWidth + 5, yPosition + 29);
+    pdf.text(program.eixo || "Não informado", margin + 3, yPosition + 29);
+    pdf.text(program.createdAt.toLocaleDateString('pt-BR'), margin + halfWidth + 3, yPosition + 29);
     
-    // Orçamento total em destaque
+    yPosition += infoBoxHeight + 15;
+
+    // Orçamento total em destaque (se houver)
     const totalOrcamento = program.acoes.reduce((total, acao) => total + calculateTotal(acao.orcamento), 0);
     if (totalOrcamento > 0) {
-      yPosition += infoBoxHeight + 5;
-      pdf.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
-      pdf.rect(margin, yPosition, contentWidth, 12, 'F');
-      pdf.setTextColor(255, 255, 255);
+      pdf.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
+      pdf.setLineWidth(0.5);
+      pdf.rect(margin, yPosition, contentWidth, 12);
+      pdf.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(11);
       pdf.text(`ORÇAMENTO TOTAL: ${totalOrcamento.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, pageWidth / 2, yPosition + 8, { align: 'center' });
-      yPosition += 17;
-    } else {
-      yPosition += infoBoxHeight + 10;
+      yPosition += 20;
     }
 
-    // Seções do programa com layout profissional
+    // Seções do programa
     const sections = [
-      { title: "DESCRIÇÃO", content: program.descricao, color: colors.primary },
-      { title: "JUSTIFICATIVA", content: program.justificativa, color: colors.accent },
-      { title: "OBJETIVOS", content: program.objetivos, color: colors.secondary },
-      { title: "DIRETRIZES", content: program.diretrizes, color: colors.darkBlue }
+      { title: "DESCRIÇÃO", content: program.descricao },
+      { title: "JUSTIFICATIVA", content: program.justificativa },
+      { title: "OBJETIVOS", content: program.objetivos },
+      { title: "DIRETRIZES", content: program.diretrizes }
     ];
 
     sections.forEach(section => {
       if (section.content) {
         checkNewPage(40);
         
-        // Cabeçalho da seção com linha colorida
-        pdf.setFillColor(section.color[0], section.color[1], section.color[2]);
-        pdf.rect(margin, yPosition, 5, 8, 'F');
+        // Cabeçalho da seção
+        pdf.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
+        pdf.setLineWidth(0.3);
+        pdf.rect(margin, yPosition, contentWidth, 8);
         
-        pdf.setFillColor(248, 250, 252);
-        pdf.rect(margin + 5, yPosition, contentWidth - 5, 8, 'F');
-        
-        pdf.setTextColor(section.color[0], section.color[1], section.color[2]);
+        pdf.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(11);
-        pdf.text(section.title, margin + 8, yPosition + 5.5);
+        pdf.text(section.title, margin + 3, yPosition + 5.5);
         yPosition += 12;
         
         // Conteúdo da seção
@@ -213,53 +216,49 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: Pr
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(9);
         yPosition = addText(section.content, margin + 3, yPosition, contentWidth - 6, 9);
-        yPosition += 10;
+        yPosition += 15;
       }
     });
 
-    // Ações com layout tabular profissional
+    // Ações do programa
     if (program.acoes.length > 0) {
       checkNewPage(60);
       
       // Cabeçalho das ações
-      pdf.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
-      pdf.rect(margin, yPosition, contentWidth, 12, 'F');
-      pdf.setTextColor(255, 255, 255);
+      pdf.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
+      pdf.setLineWidth(0.3);
+      pdf.rect(margin, yPosition, contentWidth, 12);
+      pdf.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(12);
       pdf.text(`AÇÕES DO PROGRAMA (${program.acoes.length})`, margin + 5, yPosition + 8);
-      yPosition += 18;
+      yPosition += 20;
 
       program.acoes.forEach((acao, index) => {
-        checkNewPage(50);
+        checkNewPage(45);
 
         // Cartão da ação
-        const cardHeight = 40;
-        pdf.setFillColor(index % 2 === 0 ? 255 : 252, 254, 255);
-        pdf.rect(margin, yPosition, contentWidth, cardHeight, 'F');
-        pdf.setDrawColor(colors.accent[0], colors.accent[1], colors.accent[2]);
+        const cardHeight = 35;
+        pdf.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
         pdf.setLineWidth(0.3);
         pdf.rect(margin, yPosition, contentWidth, cardHeight);
 
-        // Linha colorida lateral
-        pdf.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-        pdf.rect(margin, yPosition, 3, cardHeight, 'F');
-
         // Número da ação
-        pdf.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-        pdf.circle(margin + 15, yPosition + 8, 6, 'F');
-        pdf.setTextColor(255, 255, 255);
+        pdf.setDrawColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+        pdf.setLineWidth(1);
+        pdf.circle(margin + 12, yPosition + 8, 5);
+        pdf.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(10);
-        pdf.text(String(index + 1), margin + 15, yPosition + 10, { align: 'center' });
+        pdf.text(String(index + 1), margin + 12, yPosition + 10, { align: 'center' });
 
         // Nome da ação
-        pdf.setTextColor(colors.darkBlue[0], colors.darkBlue[1], colors.darkBlue[2]);
+        pdf.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(11);
-        yPosition = addText(acao.nome, margin + 25, yPosition + 10, contentWidth - 30, 11);
+        yPosition = addText(acao.nome, margin + 22, yPosition + 10, contentWidth - 25, 11);
         
-        // Detalhes em grid
+        // Detalhes da ação
         pdf.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(8);
@@ -267,61 +266,67 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: Pr
         let detailY = yPosition + 3;
         if (acao.produto) {
           pdf.setFont("helvetica", "bold");
-          pdf.text("Produto:", margin + 25, detailY);
+          pdf.text("Produto:", margin + 22, detailY);
           pdf.setFont("helvetica", "normal");
-          pdf.text(acao.produto, margin + 45, detailY);
-          detailY += 6;
+          pdf.text(acao.produto, margin + 38, detailY);
+          detailY += 5;
         }
         
-        // Grid de informações
-        const col1X = margin + 25;
+        // Informações em duas colunas
+        const col1X = margin + 22;
         const col2X = margin + (contentWidth / 2) + 10;
         
         pdf.setFont("helvetica", "bold");
         pdf.text("Meta:", col1X, detailY);
         pdf.setFont("helvetica", "normal");
-        pdf.text(`${acao.metaFisica} ${acao.unidadeMedida}`, col1X + 20, detailY);
+        pdf.text(`${acao.metaFisica} ${acao.unidadeMedida}`, col1X + 16, detailY);
         
         if (acao.orcamento) {
           pdf.setFont("helvetica", "bold");
           pdf.text("Orçamento:", col2X, detailY);
           pdf.setFont("helvetica", "normal");
-          pdf.text(acao.orcamento, col2X + 30, detailY);
+          pdf.text(acao.orcamento, col2X + 26, detailY);
         }
         
-        detailY += 6;
+        detailY += 5;
         if (acao.fonte) {
           pdf.setFont("helvetica", "bold");
           pdf.text("Fonte:", col1X, detailY);
           pdf.setFont("helvetica", "normal");
-          pdf.text(acao.fonte, col1X + 20, detailY);
+          pdf.text(acao.fonte, col1X + 16, detailY);
         }
         
         yPosition += cardHeight + 5;
       });
     }
 
-    // Rodapé profissional
+    // Rodapé baseado no modelo oficial
     const totalPages = pdf.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       pdf.setPage(i);
       
-      // Linha separadora
-      pdf.setDrawColor(colors.accent[0], colors.accent[1], colors.accent[2]);
+      // Linha separadora do rodapé
+      pdf.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
       pdf.setLineWidth(0.3);
-      pdf.line(margin, pageHeight - 20, pageWidth - margin, pageHeight - 20);
+      pdf.line(margin, pageHeight - 25, pageWidth - margin, pageHeight - 25);
       
-      // Texto do rodapé
+      // Endereço e informações de contato (baseado no modelo)
       pdf.setFontSize(8);
       pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
-      pdf.text(`Página ${i} de ${totalPages}`, pageWidth - 30, pageHeight - 12, { align: 'right' });
-      pdf.text("Prefeitura Municipal de Presidente Getúlio - SC", margin, pageHeight - 12);
-      pdf.text(`Documento gerado em ${new Date().toLocaleDateString('pt-BR')}`, pageWidth / 2, pageHeight - 12, { align: 'center' });
+      pdf.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+      
+      // Endereço
+      pdf.text("Praça Otto Müller, 3º - 10, Centro - Presidente Getúlio - SC", pageWidth / 2, pageHeight - 18, { align: 'center' });
+      pdf.text("Fone: (47) 3353-5500", pageWidth / 2, pageHeight - 14, { align: 'center' });
+      pdf.text("E-mail: administracao@presidentegetulio.sc.gov.br", pageWidth / 2, pageHeight - 10, { align: 'center' });
+      
+      // Número da página
+      pdf.text(`Página ${i} de ${totalPages}`, pageWidth - 30, pageHeight - 6, { align: 'right' });
+      pdf.text(`Documento gerado em ${new Date().toLocaleDateString('pt-BR')}`, margin, pageHeight - 6);
     }
 
     // Salvar o PDF
-    const fileName = `ficha-programa-${program.programa.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.pdf`;
+    const fileName = `programa-${program.programa.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.pdf`;
     pdf.save(fileName);
   };
 

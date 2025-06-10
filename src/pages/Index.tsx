@@ -208,7 +208,8 @@ const Index = () => {
               </CardHeader>
               <CardContent>
                 <IdeasBank 
-                  ideas={ideas} 
+                  ideas={ideas}
+                  programs={programs}
                   onAdd={addIdea}
                   onDelete={deleteIdea}
                 />

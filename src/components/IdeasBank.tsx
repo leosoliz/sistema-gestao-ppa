@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,16 +5,18 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash, Search } from "lucide-react";
-import { Idea } from "@/pages/Index";
+import { Plus, Trash, Search, CheckCircle } from "lucide-react";
+import { Idea, Program } from "@/pages/Index";
+import { getIdeaUsageInfo } from "@/utils/ideaUtils";
 
 interface IdeasBankProps {
   ideas: Idea[];
+  programs: Program[];
   onAdd: (idea: Omit<Idea, "id" | "createdAt">) => void;
   onDelete: (ideaId: string) => void;
 }
 
-export const IdeasBank = ({ ideas, onAdd, onDelete }: IdeasBankProps) => {
+export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) => {
   const [newIdea, setNewIdea] = useState({
     nome: "",
     produto: "",
@@ -157,49 +158,79 @@ export const IdeasBank = ({ ideas, onAdd, onDelete }: IdeasBankProps) => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredIdeas.map((idea) => (
-              <Card key={idea.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="pt-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <h4 className="font-medium text-blue-900 line-clamp-2">
-                      {idea.nome}
-                    </h4>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => {
-                        if (window.confirm('Tem certeza que deseja excluir esta ideia?')) {
-                          onDelete(idea.id);
-                        }
-                      }}
-                    >
-                      <Trash className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  
-                  {idea.produto && (
-                    <p className="text-sm text-gray-600 mb-2">
-                      <span className="font-medium">Produto:</span> {idea.produto}
-                    </p>
-                  )}
-                  
-                  {idea.unidadeMedida && (
-                    <p className="text-sm text-gray-600 mb-2">
-                      <span className="font-medium">Unidade:</span> {idea.unidadeMedida}
-                    </p>
-                  )}
-                  
-                  <div className="flex justify-between items-center">
-                    <Badge variant="outline" className="text-xs">
-                      {idea.categoria}
-                    </Badge>
-                    <p className="text-xs text-gray-500">
-                      {idea.createdAt.toLocaleDateString('pt-BR')}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            {filteredIdeas.map((idea) => {
+              const usageInfo = getIdeaUsageInfo(idea, programs);
+              
+              return (
+                <Card 
+                  key={idea.id} 
+                  className={`hover:shadow-md transition-shadow ${
+                    usageInfo.isUsed 
+                      ? "border-green-300 bg-green-50" 
+                      : "border-gray-200"
+                  }`}
+                >
+                  <CardContent className="pt-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-medium text-blue-900 line-clamp-2">
+                            {idea.nome}
+                          </h4>
+                          {usageInfo.isUsed && (
+                            <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                          )}
+                        </div>
+                        {usageInfo.isUsed && (
+                          <p className="text-xs text-green-700 mb-2">
+                            Utilizada em: {usageInfo.programNames.join(", ")}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => {
+                          if (window.confirm('Tem certeza que deseja excluir esta ideia?')) {
+                            onDelete(idea.id);
+                          }
+                        }}
+                      >
+                        <Trash className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    
+                    {idea.produto && (
+                      <p className="text-sm text-gray-600 mb-2">
+                        <span className="font-medium">Produto:</span> {idea.produto}
+                      </p>
+                    )}
+                    
+                    {idea.unidadeMedida && (
+                      <p className="text-sm text-gray-600 mb-2">
+                        <span className="font-medium">Unidade:</span> {idea.unidadeMedida}
+                      </p>
+                    )}
+                    
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-1">
+                        <Badge variant="outline" className="text-xs">
+                          {idea.categoria}
+                        </Badge>
+                        {usageInfo.isUsed && (
+                          <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                            Em uso
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {idea.createdAt.toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>

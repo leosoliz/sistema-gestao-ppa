@@ -1,7 +1,8 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, FileText, Lightbulb, Eye, Target } from "lucide-react";
+import { Plus, FileText, Lightbulb, Eye, Target, DollarSign } from "lucide-react";
 import { ProgramForm } from "@/components/ProgramForm";
 import { ProgramList } from "@/components/ProgramList";
 import { IdeasBank } from "@/components/IdeasBank";
@@ -60,6 +61,23 @@ const Index = () => {
   const handleUpdateProgram = (updatedProgram: Program) => {
     updateProgram(updatedProgram);
     setSelectedProgram(updatedProgram);
+  };
+
+  // Calculate total budget from all programs
+  const totalBudget = programs.reduce((total, program) => {
+    const programBudget = program.acoes.reduce((programTotal, action) => {
+      const budget = parseFloat(action.orcamento?.replace(/[^\d,]/g, '').replace(',', '.') || '0');
+      return programTotal + budget;
+    }, 0);
+    return total + programBudget;
+  }, 0);
+
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2
+    });
   };
 
   if (programsLoading || ideasLoading || eixosLoading) {
@@ -123,7 +141,7 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
               <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg">Total de Programas</CardTitle>
@@ -159,6 +177,20 @@ const Index = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-3xl font-bold">{eixos.length}</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white">
+                <CardHeader className="pb-2 flex flex-row items-center space-y-0">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Orçamento Total
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xl font-bold" title={formatCurrency(totalBudget)}>
+                    {formatCurrency(totalBudget)}
+                  </p>
                 </CardContent>
               </Card>
             </div>

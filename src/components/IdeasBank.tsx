@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash, Search, CheckCircle, EyeOff, RefreshCw } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Plus, Trash, Search, CheckCircle, EyeOff, RefreshCw, Edit, Eye } from "lucide-react";
 import { Idea, Program } from "@/pages/Index";
 import { getIdeaUsageInfo, checkIdeaUsageInDatabase } from "@/utils/ideaUtils";
 import { getAvailableIdeas } from "@/utils/availableIdeasUtils";
@@ -16,10 +16,18 @@ interface IdeasBankProps {
   programs: Program[];
   onAdd: (idea: Omit<Idea, "id" | "createdAt">) => void;
   onDelete: (ideaId: string) => void;
+  onUpdate?: (ideaId: string, idea: Omit<Idea, "id" | "createdAt">) => void;
 }
 
-export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) => {
+export const IdeasBank = ({ ideas, programs, onAdd, onDelete, onUpdate }: IdeasBankProps) => {
   const [newIdea, setNewIdea] = useState({
+    nome: "",
+    produto: "",
+    unidadeMedida: "",
+    categoria: "",
+  });
+  const [editingIdea, setEditingIdea] = useState<Idea | null>(null);
+  const [editForm, setEditForm] = useState({
     nome: "",
     produto: "",
     unidadeMedida: "",
@@ -29,11 +37,16 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) 
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [showUsedIdeas, setShowUsedIdeas] = useState(false);
   const [databaseUsageInfo, setDatabaseUsageInfo] = useState<Record<string, { isUsed: boolean; programNames: string[] }>>({});
+  const [manuallyHiddenIdeas, setManuallyHiddenIdeas] = useState<Set<string>>(new Set());
   const [isCheckingDatabase, setIsCheckingDatabase] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const categories = Array.from(new Set(ideas.map(idea => idea.categoria).filter(Boolean)));
   const availableIdeas = getAvailableIdeas(ideas, programs);
-  const ideasToShow = showUsedIdeas ? ideas : availableIdeas;
+  
+  // Filtra ideias considerando também as manualmente ocultas
+  const filteredAvailableIdeas = availableIdeas.filter(idea => !manuallyHiddenIdeas.has(idea.id));
+  const ideasToShow = showUsedIdeas ? ideas : filteredAvailableIdeas;
 
   // Função para verificar uso no banco de dados
   const checkDatabaseUsage = async () => {
@@ -89,7 +102,47 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) 
     });
   };
 
-  const usedIdeasCount = ideas.length - availableIdeas.length;
+  const handleEditClick = (idea: Idea) => {
+    setEditingIdea(idea);
+    setEditForm({
+      nome: idea.nome,
+      produto: idea.produto,
+      unidadeMedida: idea.unidadeMedida,
+      categoria: idea.categoria,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editForm.nome.trim() || !editingIdea) {
+      alert("Por favor, preencha pelo menos o nome da ideia.");
+      return;
+    }
+
+    if (onUpdate) {
+      onUpdate(editingIdea.id, {
+        ...editForm,
+        categoria: editForm.categoria || "Geral",
+      });
+    }
+
+    setIsEditDialogOpen(false);
+    setEditingIdea(null);
+  };
+
+  const toggleIdeaVisibility = (ideaId: string) => {
+    const newHiddenIdeas = new Set(manuallyHiddenIdeas);
+    if (newHiddenIdeas.has(ideaId)) {
+      newHiddenIdeas.delete(ideaId);
+    } else {
+      newHiddenIdeas.add(ideaId);
+    }
+    setManuallyHiddenIdeas(newHiddenIdeas);
+  };
+
+  const usedIdeasCount = ideas.length - filteredAvailableIdeas.length;
 
   return (
     <div className="space-y-6">
@@ -227,22 +280,14 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) 
             {filteredIdeas.map((idea) => {
               const localUsageInfo = getIdeaUsageInfo(idea, programs);
               const dbUsageInfo = databaseUsageInfo[idea.id];
-              
-              // SEMPRE prioriza a informação do banco de dados quando disponível
-              // Se não houver info do BD, usa a verificação local como fallback
               const finalUsageInfo = dbUsageInfo || localUsageInfo;
-              
-              console.log('Renderizando ideia:', idea.nome, {
-                localUsageInfo,
-                dbUsageInfo,
-                finalUsageInfo
-              });
+              const isManuallyHidden = manuallyHiddenIdeas.has(idea.id);
               
               return (
                 <Card 
                   key={idea.id} 
                   className={`hover:shadow-md transition-shadow ${
-                    finalUsageInfo.isUsed 
+                    finalUsageInfo.isUsed || isManuallyHidden
                       ? "border-green-300 bg-green-50" 
                       : "border-gray-200"
                   }`}
@@ -254,27 +299,111 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) 
                           <h4 className="font-medium text-blue-900 line-clamp-2">
                             {idea.nome}
                           </h4>
-                          {finalUsageInfo.isUsed && (
+                          {(finalUsageInfo.isUsed || isManuallyHidden) && (
                             <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
                           )}
                         </div>
-                        {finalUsageInfo.isUsed && (
+                        {finalUsageInfo.isUsed && finalUsageInfo.programNames.length > 0 && (
                           <p className="text-xs text-green-700 mb-2">
                             Utilizada em: {finalUsageInfo.programNames.join(", ")}
                           </p>
                         )}
+                        {isManuallyHidden && !finalUsageInfo.isUsed && (
+                          <p className="text-xs text-green-700 mb-2">
+                            Marcada como utilizada manualmente
+                          </p>
+                        )}
                       </div>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => {
-                          if (window.confirm('Tem certeza que deseja excluir esta ideia?')) {
-                            onDelete(idea.id);
-                          }
-                        }}
-                      >
-                        <Trash className="h-3 w-3" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Dialog open={isEditDialogOpen && editingIdea?.id === idea.id} onOpenChange={setIsEditDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditClick(idea)}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Editar Ideia</DialogTitle>
+                            </DialogHeader>
+                            <form onSubmit={handleEditSubmit} className="space-y-4">
+                              <div>
+                                <Label htmlFor="editNome">Nome da Ideia *</Label>
+                                <Input
+                                  id="editNome"
+                                  value={editForm.nome}
+                                  onChange={(e) => setEditForm({ ...editForm, nome: e.target.value })}
+                                  placeholder="Nome da ideia/ação"
+                                  required
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor="editProduto">Produto</Label>
+                                <Input
+                                  id="editProduto"
+                                  value={editForm.produto}
+                                  onChange={(e) => setEditForm({ ...editForm, produto: e.target.value })}
+                                  placeholder="Produto esperado"
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor="editUnidade">Unidade de Medida</Label>
+                                <Input
+                                  id="editUnidade"
+                                  value={editForm.unidadeMedida}
+                                  onChange={(e) => setEditForm({ ...editForm, unidadeMedida: e.target.value })}
+                                  placeholder="Ex: Unidade, %, Km"
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor="editCategoria">Categoria</Label>
+                                <Input
+                                  id="editCategoria"
+                                  value={editForm.categoria}
+                                  onChange={(e) => setEditForm({ ...editForm, categoria: e.target.value })}
+                                  placeholder="Ex: Educação, Saúde, Infraestrutura"
+                                />
+                              </div>
+                              
+                              <div className="flex gap-2">
+                                <Button type="submit" className="bg-orange-600 hover:bg-orange-700">
+                                  Salvar Alterações
+                                </Button>
+                                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                                  Cancelar
+                                </Button>
+                              </div>
+                            </form>
+                          </DialogContent>
+                        </Dialog>
+
+                        <Button
+                          size="sm"
+                          variant={isManuallyHidden ? "default" : "outline"}
+                          onClick={() => toggleIdeaVisibility(idea.id)}
+                          title={isManuallyHidden ? "Mostrar ideia" : "Marcar como utilizada"}
+                        >
+                          {isManuallyHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => {
+                            if (window.confirm('Tem certeza que deseja excluir esta ideia?')) {
+                              onDelete(idea.id);
+                            }
+                          }}
+                        >
+                          <Trash className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                     
                     {idea.produto && (
@@ -297,6 +426,11 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) 
                         {finalUsageInfo.isUsed && (
                           <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
                             {dbUsageInfo ? "BD Confirmado" : "Detectado Local"}
+                          </Badge>
+                        )}
+                        {isManuallyHidden && (
+                          <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
+                            Manual
                           </Badge>
                         )}
                       </div>

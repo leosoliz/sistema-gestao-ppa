@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Idea } from '@/pages/Index';
@@ -68,6 +67,35 @@ export const useIdeas = () => {
     }
   };
 
+  const updateIdea = async (ideaId: string, idea: Omit<Idea, "id" | "createdAt">) => {
+    try {
+      const { error } = await supabase
+        .from('ideas')
+        .update({
+          titulo: idea.nome,
+          descricao: idea.produto,
+          categoria: idea.categoria
+        })
+        .eq('id', ideaId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Ideia atualizada",
+        description: "A ideia foi atualizada com sucesso!",
+      });
+
+      loadIdeas();
+    } catch (error) {
+      console.error('Erro ao atualizar ideia:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a ideia.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const deleteIdea = async (ideaId: string) => {
     try {
       const { error } = await supabase
@@ -101,6 +129,7 @@ export const useIdeas = () => {
     ideas,
     loading,
     addIdea,
+    updateIdea,
     deleteIdea,
     refreshIdeas: loadIdeas
   };

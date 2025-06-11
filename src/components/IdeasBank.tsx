@@ -1,14 +1,14 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash, Search, CheckCircle, EyeOff } from "lucide-react";
+import { Plus, Trash, Search, CheckCircle, EyeOff, RefreshCw } from "lucide-react";
 import { Idea, Program } from "@/pages/Index";
-import { getIdeaUsageInfo } from "@/utils/ideaUtils";
+import { getIdeaUsageInfo, checkIdeaUsageInDatabase } from "@/utils/ideaUtils";
 import { getAvailableIdeas } from "@/utils/availableIdeasUtils";
 
 interface IdeasBankProps {
@@ -28,10 +28,33 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [showUsedIdeas, setShowUsedIdeas] = useState(false);
+  const [databaseUsageInfo, setDatabaseUsageInfo] = useState<Record<string, { isUsed: boolean; programNames: string[] }>>({});
+  const [isCheckingDatabase, setIsCheckingDatabase] = useState(false);
 
   const categories = Array.from(new Set(ideas.map(idea => idea.categoria).filter(Boolean)));
   const availableIdeas = getAvailableIdeas(ideas, programs);
   const ideasToShow = showUsedIdeas ? ideas : availableIdeas;
+
+  // Função para verificar uso no banco de dados
+  const checkDatabaseUsage = async () => {
+    setIsCheckingDatabase(true);
+    const usageInfo: Record<string, { isUsed: boolean; programNames: string[] }> = {};
+    
+    for (const idea of ideas) {
+      const dbUsage = await checkIdeaUsageInDatabase(idea);
+      usageInfo[idea.id] = dbUsage;
+    }
+    
+    setDatabaseUsageInfo(usageInfo);
+    setIsCheckingDatabase(false);
+  };
+
+  // Verificar uso no banco ao carregar o componente
+  useEffect(() => {
+    if (ideas.length > 0) {
+      checkDatabaseUsage();
+    }
+  }, [ideas.length]);
 
   const filteredIdeas = ideasToShow.filter(idea => {
     const matchesSearch = idea.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -150,6 +173,16 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) 
         </Select>
 
         <Button
+          variant="outline"
+          onClick={checkDatabaseUsage}
+          disabled={isCheckingDatabase}
+          className="w-full sm:w-auto"
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${isCheckingDatabase ? 'animate-spin' : ''}`} />
+          Verificar BD
+        </Button>
+
+        <Button
           variant={showUsedIdeas ? "default" : "outline"}
           onClick={() => setShowUsedIdeas(!showUsedIdeas)}
           className="w-full sm:w-auto"
@@ -188,12 +221,16 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredIdeas.map((idea) => {
               const usageInfo = getIdeaUsageInfo(idea, programs);
+              const dbUsageInfo = databaseUsageInfo[idea.id];
+              
+              // Prioriza informação do banco de dados se disponível
+              const finalUsageInfo = dbUsageInfo || usageInfo;
               
               return (
                 <Card 
                   key={idea.id} 
                   className={`hover:shadow-md transition-shadow ${
-                    usageInfo.isUsed 
+                    finalUsageInfo.isUsed 
                       ? "border-green-300 bg-green-50" 
                       : "border-gray-200"
                   }`}
@@ -205,13 +242,13 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) 
                           <h4 className="font-medium text-blue-900 line-clamp-2">
                             {idea.nome}
                           </h4>
-                          {usageInfo.isUsed && (
+                          {finalUsageInfo.isUsed && (
                             <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
                           )}
                         </div>
-                        {usageInfo.isUsed && (
+                        {finalUsageInfo.isUsed && (
                           <p className="text-xs text-green-700 mb-2">
-                            Utilizada em: {usageInfo.programNames.join(", ")}
+                            Utilizada em: {finalUsageInfo.programNames.join(", ")}
                           </p>
                         )}
                       </div>
@@ -245,9 +282,9 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) 
                         <Badge variant="outline" className="text-xs">
                           {idea.categoria}
                         </Badge>
-                        {usageInfo.isUsed && (
+                        {finalUsageInfo.isUsed && (
                           <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
-                            Em uso
+                            {dbUsageInfo ? "BD Confirmado" : "Em uso"}
                           </Badge>
                         )}
                       </div>

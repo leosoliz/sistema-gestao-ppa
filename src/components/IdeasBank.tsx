@@ -38,13 +38,18 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) 
   // Função para verificar uso no banco de dados
   const checkDatabaseUsage = async () => {
     setIsCheckingDatabase(true);
+    console.log('Iniciando verificação no banco de dados para', ideas.length, 'ideias');
+    
     const usageInfo: Record<string, { isUsed: boolean; programNames: string[] }> = {};
     
     for (const idea of ideas) {
+      console.log('Verificando ideia:', idea.nome);
       const dbUsage = await checkIdeaUsageInDatabase(idea);
       usageInfo[idea.id] = dbUsage;
+      console.log('Resultado para', idea.nome, ':', dbUsage);
     }
     
+    console.log('Verificação completa. Resultados:', usageInfo);
     setDatabaseUsageInfo(usageInfo);
     setIsCheckingDatabase(false);
   };
@@ -220,11 +225,18 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) 
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredIdeas.map((idea) => {
-              const usageInfo = getIdeaUsageInfo(idea, programs);
+              const localUsageInfo = getIdeaUsageInfo(idea, programs);
               const dbUsageInfo = databaseUsageInfo[idea.id];
               
-              // Prioriza informação do banco de dados se disponível
-              const finalUsageInfo = dbUsageInfo || usageInfo;
+              // SEMPRE prioriza a informação do banco de dados quando disponível
+              // Se não houver info do BD, usa a verificação local como fallback
+              const finalUsageInfo = dbUsageInfo || localUsageInfo;
+              
+              console.log('Renderizando ideia:', idea.nome, {
+                localUsageInfo,
+                dbUsageInfo,
+                finalUsageInfo
+              });
               
               return (
                 <Card 
@@ -284,7 +296,7 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) 
                         </Badge>
                         {finalUsageInfo.isUsed && (
                           <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
-                            {dbUsageInfo ? "BD Confirmado" : "Em uso"}
+                            {dbUsageInfo ? "BD Confirmado" : "Detectado Local"}
                           </Badge>
                         )}
                       </div>

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash, Search, CheckCircle } from "lucide-react";
+import { Plus, Trash, Search, CheckCircle, EyeOff } from "lucide-react";
 import { Idea, Program } from "@/pages/Index";
 import { getIdeaUsageInfo } from "@/utils/ideaUtils";
+import { getAvailableIdeas } from "@/utils/availableIdeasUtils";
 
 interface IdeasBankProps {
   ideas: Idea[];
@@ -25,10 +27,13 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) 
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [showUsedIdeas, setShowUsedIdeas] = useState(false);
 
   const categories = Array.from(new Set(ideas.map(idea => idea.categoria).filter(Boolean)));
+  const availableIdeas = getAvailableIdeas(ideas, programs);
+  const ideasToShow = showUsedIdeas ? ideas : availableIdeas;
 
-  const filteredIdeas = ideas.filter(idea => {
+  const filteredIdeas = ideasToShow.filter(idea => {
     const matchesSearch = idea.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          idea.produto.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === "all" || idea.categoria === filterCategory;
@@ -55,6 +60,8 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) 
       categoria: "",
     });
   };
+
+  const usedIdeasCount = ideas.length - availableIdeas.length;
 
   return (
     <div className="space-y-6">
@@ -141,18 +148,39 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete }: IdeasBankProps) 
             ))}
           </SelectContent>
         </Select>
+
+        <Button
+          variant={showUsedIdeas ? "default" : "outline"}
+          onClick={() => setShowUsedIdeas(!showUsedIdeas)}
+          className="w-full sm:w-auto"
+        >
+          <EyeOff className="h-4 w-4 mr-2" />
+          {showUsedIdeas ? "Ocultar Usadas" : "Mostrar Usadas"}
+        </Button>
       </div>
 
       <div className="space-y-3">
-        <h3 className="text-lg font-medium">
-          Ideias Cadastradas ({filteredIdeas.length})
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium">
+            {showUsedIdeas ? `Todas as Ideias (${filteredIdeas.length})` : `Ideias Disponíveis (${filteredIdeas.length})`}
+          </h3>
+          {usedIdeasCount > 0 && !showUsedIdeas && (
+            <p className="text-sm text-gray-600">
+              {usedIdeasCount} ideia{usedIdeasCount > 1 ? 's' : ''} em uso (oculta{usedIdeasCount > 1 ? 's' : ''})
+            </p>
+          )}
+        </div>
         
         {filteredIdeas.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <p className="text-gray-500">
-                {ideas.length === 0 ? "Nenhuma ideia cadastrada ainda." : "Nenhuma ideia encontrada com os filtros aplicados."}
+                {ideas.length === 0 
+                  ? "Nenhuma ideia cadastrada ainda." 
+                  : showUsedIdeas 
+                    ? "Nenhuma ideia encontrada com os filtros aplicados."
+                    : "Nenhuma ideia disponível com os filtros aplicados."
+                }
               </p>
             </CardContent>
           </Card>

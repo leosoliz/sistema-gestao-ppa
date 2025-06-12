@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Idea } from '@/pages/Index';
@@ -23,7 +24,8 @@ export const useIdeas = () => {
         produto: idea.descricao || '',
         unidadeMedida: '',
         categoria: idea.categoria || 'Geral',
-        createdAt: new Date(idea.created_at)
+        createdAt: new Date(idea.created_at),
+        isUsed: idea.is_used || false
       }));
 
       setIdeas(formattedIdeas);
@@ -46,7 +48,8 @@ export const useIdeas = () => {
         .insert({
           titulo: idea.nome,
           descricao: idea.produto,
-          categoria: idea.categoria
+          categoria: idea.categoria,
+          is_used: false
         });
 
       if (error) throw error;
@@ -96,6 +99,31 @@ export const useIdeas = () => {
     }
   };
 
+  const markIdeaAsUsed = async (ideaId: string, isUsed: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('ideas')
+        .update({ is_used: isUsed })
+        .eq('id', ideaId);
+
+      if (error) throw error;
+
+      toast({
+        title: isUsed ? "Ideia marcada como utilizada" : "Ideia marcada como disponível",
+        description: isUsed ? "A ideia foi marcada como utilizada." : "A ideia foi marcada como disponível.",
+      });
+
+      loadIdeas();
+    } catch (error) {
+      console.error('Erro ao atualizar status da ideia:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o status da ideia.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const deleteIdea = async (ideaId: string) => {
     try {
       const { error } = await supabase
@@ -121,6 +149,41 @@ export const useIdeas = () => {
     }
   };
 
+  // Função para sincronizar o status das ideias baseado nas ações dos programas
+  const syncIdeasUsageStatus = async () => {
+    try {
+      // Primeiro, marca todas as ideias como não utilizadas
+      await supabase
+        .from('ideas')
+        .update({ is_used: false })
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Atualiza todas
+
+      // Depois, marca como utilizadas aquelas que estão em ações
+      const { error } = await supabase.rpc('sync_ideas_usage_status');
+
+      if (error) {
+        // Se a função RPC não existe, fazemos manualmente
+        const { data: actions } = await supabase
+          .from('actions')
+          .select('nome, produto');
+
+        if (actions) {
+          for (const action of actions) {
+            await supabase
+              .from('ideas')
+              .update({ is_used: true })
+              .eq('titulo', action.nome)
+              .eq('descricao', action.produto || '');
+          }
+        }
+      }
+
+      loadIdeas();
+    } catch (error) {
+      console.error('Erro ao sincronizar status das ideias:', error);
+    }
+  };
+
   useEffect(() => {
     loadIdeas();
   }, []);
@@ -131,6 +194,8 @@ export const useIdeas = () => {
     addIdea,
     updateIdea,
     deleteIdea,
+    markIdeaAsUsed,
+    syncIdeasUsageStatus,
     refreshIdeas: loadIdeas
   };
 };

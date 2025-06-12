@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -43,6 +42,7 @@ export interface Idea {
   unidadeMedida: string;
   categoria: string;
   createdAt: Date;
+  isUsed?: boolean;
 }
 
 const Index = () => {

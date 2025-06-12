@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,8 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Trash, Search, CheckCircle, EyeOff, RefreshCw, Edit, Eye } from "lucide-react";
 import { Idea, Program } from "@/pages/Index";
-import { getIdeaUsageInfo, checkIdeaUsageInDatabase } from "@/utils/ideaUtils";
-import { getAvailableIdeas } from "@/utils/availableIdeasUtils";
 
 interface IdeasBankProps {
   ideas: Idea[];
@@ -17,9 +16,19 @@ interface IdeasBankProps {
   onAdd: (idea: Omit<Idea, "id" | "createdAt">) => void;
   onDelete: (ideaId: string) => void;
   onUpdate?: (ideaId: string, idea: Omit<Idea, "id" | "createdAt">) => void;
+  onMarkAsUsed?: (ideaId: string, isUsed: boolean) => void;
+  onSyncUsage?: () => void;
 }
 
-export const IdeasBank = ({ ideas, programs, onAdd, onDelete, onUpdate }: IdeasBankProps) => {
+export const IdeasBank = ({ 
+  ideas, 
+  programs, 
+  onAdd, 
+  onDelete, 
+  onUpdate,
+  onMarkAsUsed,
+  onSyncUsage 
+}: IdeasBankProps) => {
   const [newIdea, setNewIdea] = useState({
     nome: "",
     produto: "",
@@ -36,43 +45,13 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete, onUpdate }: IdeasB
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [showUsedIdeas, setShowUsedIdeas] = useState(false);
-  const [databaseUsageInfo, setDatabaseUsageInfo] = useState<Record<string, { isUsed: boolean; programNames: string[] }>>({});
-  const [manuallyHiddenIdeas, setManuallyHiddenIdeas] = useState<Set<string>>(new Set());
-  const [isCheckingDatabase, setIsCheckingDatabase] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const categories = Array.from(new Set(ideas.map(idea => idea.categoria).filter(Boolean)));
-  const availableIdeas = getAvailableIdeas(ideas, programs);
   
-  // Filtra ideias considerando também as manualmente ocultas
-  const filteredAvailableIdeas = availableIdeas.filter(idea => !manuallyHiddenIdeas.has(idea.id));
-  const ideasToShow = showUsedIdeas ? ideas : filteredAvailableIdeas;
-
-  // Função para verificar uso no banco de dados
-  const checkDatabaseUsage = async () => {
-    setIsCheckingDatabase(true);
-    console.log('Iniciando verificação no banco de dados para', ideas.length, 'ideias');
-    
-    const usageInfo: Record<string, { isUsed: boolean; programNames: string[] }> = {};
-    
-    for (const idea of ideas) {
-      console.log('Verificando ideia:', idea.nome);
-      const dbUsage = await checkIdeaUsageInDatabase(idea);
-      usageInfo[idea.id] = dbUsage;
-      console.log('Resultado para', idea.nome, ':', dbUsage);
-    }
-    
-    console.log('Verificação completa. Resultados:', usageInfo);
-    setDatabaseUsageInfo(usageInfo);
-    setIsCheckingDatabase(false);
-  };
-
-  // Verificar uso no banco ao carregar o componente
-  useEffect(() => {
-    if (ideas.length > 0) {
-      checkDatabaseUsage();
-    }
-  }, [ideas.length]);
+  // Filtra ideias baseado no campo is_used do banco
+  const availableIdeas = ideas.filter(idea => !idea.isUsed);
+  const ideasToShow = showUsedIdeas ? ideas : availableIdeas;
 
   const filteredIdeas = ideasToShow.filter(idea => {
     const matchesSearch = idea.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -132,17 +111,13 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete, onUpdate }: IdeasB
     setEditingIdea(null);
   };
 
-  const toggleIdeaVisibility = (ideaId: string) => {
-    const newHiddenIdeas = new Set(manuallyHiddenIdeas);
-    if (newHiddenIdeas.has(ideaId)) {
-      newHiddenIdeas.delete(ideaId);
-    } else {
-      newHiddenIdeas.add(ideaId);
+  const toggleIdeaUsage = (ideaId: string, currentStatus: boolean) => {
+    if (onMarkAsUsed) {
+      onMarkAsUsed(ideaId, !currentStatus);
     }
-    setManuallyHiddenIdeas(newHiddenIdeas);
   };
 
-  const usedIdeasCount = ideas.length - filteredAvailableIdeas.length;
+  const usedIdeasCount = ideas.filter(idea => idea.isUsed).length;
 
   return (
     <div className="space-y-6">
@@ -230,15 +205,16 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete, onUpdate }: IdeasB
           </SelectContent>
         </Select>
 
-        <Button
-          variant="outline"
-          onClick={checkDatabaseUsage}
-          disabled={isCheckingDatabase}
-          className="w-full sm:w-auto"
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isCheckingDatabase ? 'animate-spin' : ''}`} />
-          Verificar BD
-        </Button>
+        {onSyncUsage && (
+          <Button
+            variant="outline"
+            onClick={onSyncUsage}
+            className="w-full sm:w-auto"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Sincronizar
+          </Button>
+        )}
 
         <Button
           variant={showUsedIdeas ? "default" : "outline"}
@@ -278,16 +254,13 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete, onUpdate }: IdeasB
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredIdeas.map((idea) => {
-              const localUsageInfo = getIdeaUsageInfo(idea, programs);
-              const dbUsageInfo = databaseUsageInfo[idea.id];
-              const finalUsageInfo = dbUsageInfo || localUsageInfo;
-              const isManuallyHidden = manuallyHiddenIdeas.has(idea.id);
+              const isUsed = idea.isUsed || false;
               
               return (
                 <Card 
                   key={idea.id} 
                   className={`hover:shadow-md transition-shadow ${
-                    finalUsageInfo.isUsed || isManuallyHidden
+                    isUsed
                       ? "border-green-300 bg-green-50" 
                       : "border-gray-200"
                   }`}
@@ -299,18 +272,13 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete, onUpdate }: IdeasB
                           <h4 className="font-medium text-blue-900 line-clamp-2">
                             {idea.nome}
                           </h4>
-                          {(finalUsageInfo.isUsed || isManuallyHidden) && (
+                          {isUsed && (
                             <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
                           )}
                         </div>
-                        {finalUsageInfo.isUsed && finalUsageInfo.programNames.length > 0 && (
+                        {isUsed && (
                           <p className="text-xs text-green-700 mb-2">
-                            Utilizada em: {finalUsageInfo.programNames.join(", ")}
-                          </p>
-                        )}
-                        {isManuallyHidden && !finalUsageInfo.isUsed && (
-                          <p className="text-xs text-green-700 mb-2">
-                            Marcada como utilizada manualmente
+                            Utilizada em programa
                           </p>
                         )}
                       </div>
@@ -383,14 +351,17 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete, onUpdate }: IdeasB
                           </DialogContent>
                         </Dialog>
 
-                        <Button
-                          size="sm"
-                          variant={isManuallyHidden ? "default" : "outline"}
-                          onClick={() => toggleIdeaVisibility(idea.id)}
-                          title={isManuallyHidden ? "Mostrar ideia" : "Marcar como utilizada"}
-                        >
-                          {isManuallyHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                        </Button>
+                        {onMarkAsUsed && (
+                          <Button
+                            size="sm"
+                            variant={isUsed ? "default" : "outline"}
+                            onClick={() => toggleIdeaUsage(idea.id, isUsed)}
+                            title={isUsed ? "Marcar como disponível" : "Marcar como utilizada"}
+                            className={isUsed ? "bg-green-600 hover:bg-green-700" : ""}
+                          >
+                            {isUsed ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                          </Button>
+                        )}
 
                         <Button
                           size="sm"
@@ -423,14 +394,9 @@ export const IdeasBank = ({ ideas, programs, onAdd, onDelete, onUpdate }: IdeasB
                         <Badge variant="outline" className="text-xs">
                           {idea.categoria}
                         </Badge>
-                        {finalUsageInfo.isUsed && (
+                        {isUsed && (
                           <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
-                            {dbUsageInfo ? "BD Confirmado" : "Detectado Local"}
-                          </Badge>
-                        )}
-                        {isManuallyHidden && (
-                          <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
-                            Manual
+                            Em Uso
                           </Badge>
                         )}
                       </div>

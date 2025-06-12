@@ -80,6 +80,7 @@ export type Database = {
           created_at: string
           descricao: string | null
           id: string
+          is_used: boolean
           titulo: string
         }
         Insert: {
@@ -87,6 +88,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           id?: string
+          is_used?: boolean
           titulo: string
         }
         Update: {
@@ -94,6 +96,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           id?: string
+          is_used?: boolean
           titulo?: string
         }
         Relationships: []

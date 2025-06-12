@@ -153,28 +153,27 @@ export const useIdeas = () => {
   const syncIdeasUsageStatus = async () => {
     try {
       // Primeiro, marca todas as ideias como não utilizadas
-      await supabase
+      const { error: resetError } = await supabase
         .from('ideas')
-        .update({ is_used: false })
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Atualiza todas
+        .update({ is_used: false });
 
-      // Depois, marca como utilizadas aquelas que estão em ações
-      const { error } = await supabase.rpc('sync_ideas_usage_status');
+      if (resetError) throw resetError;
 
-      if (error) {
-        // Se a função RPC não existe, fazemos manualmente
-        const { data: actions } = await supabase
-          .from('actions')
-          .select('nome, produto');
+      // Depois, busca todas as ações para marcar as ideias correspondentes como utilizadas
+      const { data: actions, error: actionsError } = await supabase
+        .from('actions')
+        .select('nome, produto');
 
-        if (actions) {
-          for (const action of actions) {
-            await supabase
-              .from('ideas')
-              .update({ is_used: true })
-              .eq('titulo', action.nome)
-              .eq('descricao', action.produto || '');
-          }
+      if (actionsError) throw actionsError;
+
+      if (actions && actions.length > 0) {
+        // Para cada ação, marca a ideia correspondente como utilizada
+        for (const action of actions) {
+          await supabase
+            .from('ideas')
+            .update({ is_used: true })
+            .eq('titulo', action.nome)
+            .eq('descricao', action.produto || '');
         }
       }
 

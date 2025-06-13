@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash, Edit } from "lucide-react";
 import { Action, Idea } from "@/pages/Index";
+import { useIdeas } from "@/hooks/useIdeas";
 
 interface ActionsManagerProps {
   actions: Action[];
@@ -134,6 +135,8 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
 
   const deleteAction = (index: number) => {
     const updatedActions = actions.filter((_, i) => i !== index);
+       // Atualizar situação da idea após ação removida
+       const ideaId = await useIdeas.getIdeaId(actions[index].nome);
     onActionsChange(updatedActions);
   };
 

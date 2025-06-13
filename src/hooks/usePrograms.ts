@@ -142,6 +142,9 @@ export const usePrograms = () => {
 
       if (deleteError) throw deleteError;
 
+   
+
+
       // Inserir novas ações
       if (updatedProgram.acoes.length > 0) {
         const actionsToInsert = updatedProgram.acoes.map(action => ({

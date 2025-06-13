@@ -77,7 +77,8 @@ export const useIdeas = () => {
         .update({
           titulo: idea.nome,
           descricao: idea.produto,
-          categoria: idea.categoria
+          categoria: idea.categoria,
+          is_used: idea.isUsed
         })
         .eq('id', ideaId);
 
@@ -96,6 +97,20 @@ export const useIdeas = () => {
         description: "Não foi possível atualizar a ideia.",
         variant: "destructive"
       });
+    }
+  };
+
+  const getIdeaId = async (ideaName: string) => {
+    try {
+      const {data, error} = await supabase
+      .from("ideas")
+      .select('id')
+      .eq('titulo', ideaName);
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      
     }
   };
 
@@ -193,6 +208,7 @@ export const useIdeas = () => {
     addIdea,
     updateIdea,
     deleteIdea,
+    getIdeaId,
     markIdeaAsUsed,
     syncIdeasUsageStatus,
     refreshIdeas: loadIdeas

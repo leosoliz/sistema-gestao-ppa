@@ -168,7 +168,7 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
                   <SelectValue placeholder="Escolha uma ideia ou crie uma nova ação" />
                 </SelectTrigger>
                 <SelectContent>
-                  {ideas.map((idea) => (
+                  {ideas.filter((idea) => idea.isUsed === false).map((idea) => (
                     <SelectItem key={idea.id} value={idea.id}>
                       {idea.nome}
                     </SelectItem>

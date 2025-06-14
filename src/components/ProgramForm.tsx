@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,9 +18,11 @@ interface ProgramFormProps {
   onSubmit: (program: Omit<Program, "id" | "createdAt">) => void;
   ideas: Idea[];
   onAddToIdeasBank: (idea: Omit<Idea, "id" | "createdAt">) => void;
+  refreshPrograms: () => void;
+  refreshIdeas: () => void;
 }
 
-export const ProgramForm = ({ onSubmit, ideas, onAddToIdeasBank }: ProgramFormProps) => {
+export const ProgramForm = ({ onSubmit, ideas, onAddToIdeasBank, refreshPrograms, refreshIdeas }: ProgramFormProps) => {
   const [formData, setFormData] = useState({
     secretaria: "",
     departamento: "",
@@ -211,6 +212,8 @@ export const ProgramForm = ({ onSubmit, ideas, onAddToIdeasBank }: ProgramFormPr
             ideas={ideas}
             onAddToIdeasBank={onAddToIdeasBank}
             programId="" // new programs don't have an ID yet
+            refreshIdeas={refreshIdeas}
+            refreshPrograms={refreshPrograms}
           />
         </CardContent>
       </Card>

@@ -20,9 +20,11 @@ interface ProgramEditFormProps {
   onUpdate: (program: Program) => void;
   onAddToIdeasBank: (idea: Omit<Idea, "id" | "createdAt">) => void;
   onCancel: () => void;
+  refreshPrograms: () => void;
+  refreshIdeas: () => void;
 }
 
-export const ProgramEditForm = ({ program, ideas, onUpdate, onAddToIdeasBank, onCancel }: ProgramEditFormProps) => {
+export const ProgramEditForm = ({ program, ideas, onUpdate, onAddToIdeasBank, onCancel, refreshPrograms, refreshIdeas }: ProgramEditFormProps) => {
   const [formData, setFormData] = useState({
     secretaria: program.secretaria,
     departamento: program.departamento,
@@ -207,7 +209,9 @@ export const ProgramEditForm = ({ program, ideas, onUpdate, onAddToIdeasBank, on
                 onActionsChange={setAcoes}
                 ideas={ideas}
                 onAddToIdeasBank={onAddToIdeasBank}
-                programId={program.id} // pass correct programId for editing
+                programId={program.id}
+                refreshIdeas={refreshIdeas}
+                refreshPrograms={refreshPrograms}
               />
             </CardContent>
           </Card>

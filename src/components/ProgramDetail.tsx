@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,8 +7,8 @@ import { Program, Idea } from "@/pages/Index";
 import { ProgramEditForm } from "./ProgramEditForm";
 import { ProgramHeader } from "./ProgramHeader";
 import { ProgramInfoTab } from "./ProgramInfoTab";
-import { ProgramActionsTab } from "./ProgramActionsTab";
 import { generateProgramPDF } from "@/utils/pdfGenerator";
+import { ActionsManager } from "./ActionsManager"; // Corrigido o import!
 
 interface ProgramDetailProps {
   program: Program;
@@ -79,15 +80,16 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank, refr
         <TabsContent value="acoes" className="space-y-6">
           <ActionsManager
             actions={program.acoes}
-            onActionsChange={() => refreshPrograms()} // Quando houver mudanças, recarregue os programas do backend!
+            onActionsChange={() => refreshPrograms()}
             ideas={ideas}
             onAddToIdeasBank={onAddToIdeasBank}
             programId={program.id}
             refreshIdeas={refreshIdeas}
-            refreshPrograms={refreshPrograms} // Prop novo!
+            refreshPrograms={refreshPrograms}
           />
         </TabsContent>
       </Tabs>
     </div>
   );
 };
+

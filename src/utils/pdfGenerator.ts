@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import { Program } from '@/pages/Index';
 
@@ -31,7 +30,6 @@ export const generateProgramPDF = (program: Program) => {
   // --- Helper Functions ---
   const checkPageBreak = (neededHeight: number) => {
     if (y + neededHeight > pageHeight - 20) {
-      addFooter();
       doc.addPage();
       y = 20;
       addHeader();
@@ -46,7 +44,7 @@ export const generateProgramPDF = (program: Program) => {
     return startY + (lines.length * fontSize * 0.35 * lineHeightFactor);
   };
 
-  // --- Header & Footer ---
+  // --- Header ---
   const addHeader = () => {
     doc.setFillColor(colors.primary);
     doc.rect(0, 0, pageWidth, 25, 'F');
@@ -57,16 +55,7 @@ export const generateProgramPDF = (program: Program) => {
     doc.text('Plano Plurianual (PPA) - Ficha de Programa', pageWidth / 2, 19, { align: 'center' });
     y = 35;
   };
-
-  const addFooter = () => {
-    const pageCount = doc.getNumberOfPages();
-    setFont('normal', 8, colors.textSecondary);
-    doc.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
-    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, margin, pageHeight - 10);
-    doc.text(`Página ${doc.getCurrentPageInfo().pageNumber} de ${pageCount}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
-  };
   
-  doc.setHook('putPages', addFooter);
   addHeader();
 
   // --- Program Title ---
@@ -252,6 +241,16 @@ export const generateProgramPDF = (program: Program) => {
       
       y = actionCardY + 75;
     });
+  }
+
+  // --- Add Footers to all pages ---
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    setFont('normal', 8, colors.textSecondary);
+    doc.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
+    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, margin, pageHeight - 10);
+    doc.text(`Página ${i} de ${pageCount}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
   }
 
   // --- Save file ---

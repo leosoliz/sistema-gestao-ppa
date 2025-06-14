@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, FileText, Lightbulb, Eye, Target, DollarSign } from "lucide-react";
@@ -50,8 +50,15 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   
   const { programs, loading: programsLoading, addProgram, updateProgram, deleteProgram } = usePrograms();
-  const { ideas, loading: ideasLoading, addIdea, deleteIdea } = useIdeas();
+  const { ideas, loading: ideasLoading, addIdea, deleteIdea, updateIdea, markIdeaAsUsed, syncIdeasUsageStatus, refreshIdeas } = useIdeas();
   const { eixos, loading: eixosLoading } = useEixos();
+
+  // Refresh ideas list when switching to ideas tab
+  useEffect(() => {
+    if (activeTab === "ideias") {
+      refreshIdeas();
+    }
+  }, [activeTab, refreshIdeas]);
 
   const viewProgram = (program: Program) => {
     setSelectedProgram(program);
@@ -244,6 +251,9 @@ const Index = () => {
                   programs={programs}
                   onAdd={addIdea}
                   onDelete={deleteIdea}
+                  onUpdate={updateIdea}
+                  onMarkAsUsed={markIdeaAsUsed}
+                  onSyncUsage={syncIdeasUsageStatus}
                 />
               </CardContent>
             </Card>

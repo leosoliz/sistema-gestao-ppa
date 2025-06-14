@@ -12,6 +12,30 @@ interface ActionsListProps {
   onDelete: (action: Action) => Promise<void>;
 }
 
+function resumoMetas(a: Action) {
+  return (
+    <span>
+      2026: {a.metaFisica2026 || '-'} | 2027: {a.metaFisica2027 || '-'} | 2028: {a.metaFisica2028 || '-'} | 2029: {a.metaFisica2029 || '-'}
+    </span>
+  );
+}
+
+function resumoOrcamento(a: Action) {
+  function total() {
+    const vals = [a.orcamento2026, a.orcamento2027, a.orcamento2028, a.orcamento2029].map(
+      v => parseFloat((v || "0").replace(/[^\d,]/g, '').replace(',', '.') || "0")
+    );
+    return vals.reduce((s, v) => s + v, 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+  return (
+    <span>
+      2026: {a.orcamento2026 || '-'} | 2027: {a.orcamento2027 || '-'} | 2028: {a.orcamento2028 || '-'} | 2029: {a.orcamento2029 || '-'}
+      <br />
+      <strong className="text-blue-800">Total: {total()}</strong>
+    </span>
+  );
+}
+
 export const ActionsList = ({
   actions,
   loading,
@@ -24,7 +48,7 @@ export const ActionsList = ({
     <div>
       <h3 className="text-lg font-medium mb-4">Ações Cadastradas ({actions.length})</h3>
       <div className="space-y-3">
-        {actions.map((action, index) => (
+        {actions.map((action) => (
           <Card key={action.id} className="border-l-4 border-l-blue-500">
             <CardContent className="pt-4">
               <div className="flex justify-between items-start">
@@ -35,16 +59,18 @@ export const ActionsList = ({
                   </div>
                   <div>
                     <p className="text-sm">
-                      <span className="font-medium">Meta:</span>{" "}
-                      {action.metaFisica} {action.unidadeMedida}
+                      <span className="font-medium">Metas:</span> {resumoMetas(action)}
                     </p>
                     <p className="text-sm">
-                      <span className="font-medium">Orçamento:</span> {action.orcamento}
+                      <span className="font-medium">Orçamento:</span> {resumoOrcamento(action)}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm">
                       <span className="font-medium">Fonte:</span> {action.fonte}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-medium">Unidade:</span> {action.unidadeMedida}
                     </p>
                   </div>
                 </div>

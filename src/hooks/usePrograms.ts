@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Program, Action } from '@/pages/Index';
@@ -41,13 +40,18 @@ export const usePrograms = () => {
             nome: action.nome,
             produto: action.produto || '',
             unidadeMedida: action.unidade_medida,
-            metaFisica: action.meta_fisica,
-            orcamento: action.orcamento || '',
-            fonte: action.fonte || ''
+            fonte: action.fonte || '',
+            metaFisica2026: action.meta_fisica_2026,
+            metaFisica2027: action.meta_fisica_2027,
+            metaFisica2028: action.meta_fisica_2028,
+            metaFisica2029: action.meta_fisica_2029,
+            orcamento2026: action.orcamento_2026,
+            orcamento2027: action.orcamento_2027,
+            orcamento2028: action.orcamento_2028,
+            orcamento2029: action.orcamento_2029,
           })),
         createdAt: new Date(program.created_at)
       }));
-
       setPrograms(programsWithActions);
     } catch (error) {
       console.error('Erro ao carregar programas:', error);
@@ -86,10 +90,18 @@ export const usePrograms = () => {
           program_id: programData.id,
           nome: action.nome,
           produto: action.produto,
-          meta_fisica: action.metaFisica,
           unidade_medida: action.unidadeMedida,
-          orcamento: action.orcamento,
-          fonte: action.fonte
+          fonte: action.fonte,
+          meta_fisica_2026: action.metaFisica2026,
+          meta_fisica_2027: action.metaFisica2027,
+          meta_fisica_2028: action.metaFisica2028,
+          meta_fisica_2029: action.metaFisica2029,
+          orcamento_2026: action.orcamento2026,
+          orcamento_2027: action.orcamento2027,
+          orcamento_2028: action.orcamento2028,
+          orcamento_2029: action.orcamento2029,
+          meta_fisica: [action.metaFisica2026, action.metaFisica2027, action.metaFisica2028, action.metaFisica2029].join(" / "),
+          orcamento: [action.orcamento2026, action.orcamento2027, action.orcamento2028, action.orcamento2029].join(" / ")
         }));
 
         const { error: actionsError } = await supabase
@@ -142,19 +154,24 @@ export const usePrograms = () => {
 
       if (deleteError) throw deleteError;
 
-   
-
-
       // Inserir novas ações
       if (updatedProgram.acoes.length > 0) {
         const actionsToInsert = updatedProgram.acoes.map(action => ({
           program_id: updatedProgram.id,
           nome: action.nome,
           produto: action.produto,
-          meta_fisica: action.metaFisica,
           unidade_medida: action.unidadeMedida,
-          orcamento: action.orcamento,
-          fonte: action.fonte
+          fonte: action.fonte,
+          meta_fisica_2026: action.metaFisica2026,
+          meta_fisica_2027: action.metaFisica2027,
+          meta_fisica_2028: action.metaFisica2028,
+          meta_fisica_2029: action.metaFisica2029,
+          orcamento_2026: action.orcamento2026,
+          orcamento_2027: action.orcamento2027,
+          orcamento_2028: action.orcamento2028,
+          orcamento_2029: action.orcamento2029,
+          meta_fisica: [action.metaFisica2026, action.metaFisica2027, action.metaFisica2028, action.metaFisica2029].join(" / "),
+          orcamento: [action.orcamento2026, action.orcamento2027, action.orcamento2028, action.orcamento2029].join(" / ")
         }));
 
         const { error: actionsError } = await supabase

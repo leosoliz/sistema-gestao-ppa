@@ -21,7 +21,7 @@ export const ActionsManager = ({
   ideas,
   onAddToIdeasBank,
   programId,
-}: ActionsManagerProps) => {
+}: any) => {
   const [editingAction, setEditingAction] = useState<Action | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -47,6 +47,9 @@ export const ActionsManager = ({
             orcamento_2028: actionData.orcamento2028,
             orcamento_2029: actionData.orcamento2029,
             program_id: programId,
+            // Sempre enviar meta_fisica para satisfazer Supabase
+            meta_fisica: [actionData.metaFisica2026, actionData.metaFisica2027, actionData.metaFisica2028, actionData.metaFisica2029].join(" / "),
+            orcamento: [actionData.orcamento2026, actionData.orcamento2027, actionData.orcamento2028, actionData.orcamento2029].join(" / ")
           })
           .eq("id", editingAction.id);
 
@@ -77,6 +80,8 @@ export const ActionsManager = ({
             orcamento_2028: actionData.orcamento2028,
             orcamento_2029: actionData.orcamento2029,
             program_id: programId,
+            meta_fisica: [actionData.metaFisica2026, actionData.metaFisica2027, actionData.metaFisica2028, actionData.metaFisica2029].join(" / "),
+            orcamento: [actionData.orcamento2026, actionData.orcamento2027, actionData.orcamento2028, actionData.orcamento2029].join(" / ")
           })
           .select()
           .maybeSingle();
@@ -126,16 +131,18 @@ export const ActionsManager = ({
       // Remove do BD
       await supabase.from("actions").delete().eq("id", action.id);
 
-      // --------- Sinaliza idea como disponível (is_used = false) ----------
+      // Sinaliza idea como disponível (is_used = false)
       if (action.nome) {
         await supabase
           .from('ideas')
           .update({ is_used: false })
           .eq('titulo', action.nome);
       }
-      // -------------------------------------------------------------------
 
       await markIdeaAsAvailableWhenRemovedFromProgram(action.nome, action.produto);
+
+      // Atualiza ideias disponíveis aqui ao remover (UX)
+      // O onActionsChange normalmente reflete a mudança até re-load externo; poderia ser melhorado com refreshIdeas se passado via props.
       onActionsChange(actions.filter((a) => a.id !== action.id));
       toast({ title: "Ação excluída!" });
     } catch (error: any) {

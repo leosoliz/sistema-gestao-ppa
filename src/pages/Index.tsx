@@ -17,7 +17,6 @@ export interface Action {
   produto: string;
   unidadeMedida: string;
   fonte: string;
-  // Novos campos plurianuais
   metaFisica2026?: string;
   metaFisica2027?: string;
   metaFisica2028?: string;
@@ -77,11 +76,14 @@ const Index = () => {
     setSelectedProgram(updatedProgram);
   };
 
-  // Calculate total budget from all programs
+  // Novo cálculo do orçamento total usando todos os anos das ações:
   const totalBudget = programs.reduce((total, program) => {
     const programBudget = program.acoes.reduce((programTotal, action) => {
-      const budget = parseFloat(action.orcamento?.replace(/[^\d,]/g, '').replace(',', '.') || '0');
-      return programTotal + budget;
+      const totalOrc =
+        [action.orcamento2026, action.orcamento2027, action.orcamento2028, action.orcamento2029]
+          .map(x => parseFloat((x || "0").replace(/[^\d,]/g, '').replace(',', '.') || '0'))
+          .reduce((sum, val) => sum + val, 0);
+      return programTotal + totalOrc;
     }, 0);
     return total + programBudget;
   }, 0);

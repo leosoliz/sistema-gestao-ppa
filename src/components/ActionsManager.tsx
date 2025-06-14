@@ -17,6 +17,15 @@ interface ActionsManagerProps {
   onAddToIdeasBank: (idea: Omit<Idea, "id" | "createdAt">) => void;
 }
 
+// Helper para gerar UUID v4 simples se necessário
+function generateUUID() {
+  // Bem simples, mas funcional para casos não críticos!
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c === "x" ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBank }: ActionsManagerProps) => {
   const [currentAction, setCurrentAction] = useState<Partial<Action>>({
     nome: "",
@@ -81,8 +90,14 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
       return;
     }
 
+    // Verifica se já existe um ID válido (UUID), caso contrário gera um novo
+    let actionId =
+      editingIndex !== null && actions[editingIndex]?.id
+        ? actions[editingIndex].id
+        : generateUUID();
+
     const actionToSave: Action = {
-      id: editingIndex !== null ? actions[editingIndex].id : Date.now().toString(),
+      id: actionId,
       nome: currentAction.nome || "",
       produto: currentAction.produto || "",
       unidadeMedida: currentAction.unidadeMedida || "",
@@ -138,10 +153,25 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
 
   const deleteAction = async (index: number) => {
     const actionToDelete = actions[index];
-    
+
+    // Checagem adicional: se o id não é um UUID válido, aborta e alerta
+    if (!actionToDelete.id || actionToDelete.id.length < 30) {
+      toast({
+        title: "Ação local não registrada",
+        description: "Não foi possível encontrar este item no banco de dados. Ela só será removida deste programa.",
+      });
+      // Remove da lista local
+      const updatedActions = actions.filter((_, i) => i !== index);
+      onActionsChange(updatedActions);
+      return;
+    }
+
     try {
-      // Primeiro, excluir a ação da base de dados
-      const { error } = await supabase
+      // Confere qual id está sendo enviado
+      console.log("Tentando excluir ação com id: ", actionToDelete.id);
+
+      // Exclui do Supabase
+      const { error, count } = await supabase
         .from('actions')
         .delete()
         .eq('id', actionToDelete.id);
@@ -149,17 +179,20 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
       if (error) {
         console.error('Erro ao excluir ação:', error);
         toast({
-          title: "Erro",
-          description: "Não foi possível excluir a ação.",
+          title: "Erro ao excluir do banco",
+          description: "Não foi possível excluir a ação no banco de dados.",
           variant: "destructive"
         });
         return;
       }
 
-      // Depois, marcar a ideia correspondente como não utilizada
-      await markIdeaAsAvailableWhenRemovedFromProgram(actionToDelete.nome, actionToDelete.produto);
-      
-      // Por fim, remover a ação da lista local e atualizar a interface
+      // Marcar ideia como disponível (sincroniza se necessário)
+      await markIdeaAsAvailableWhenRemovedFromProgram(
+        actionToDelete.nome,
+        actionToDelete.produto
+      );
+
+      // Remove da interface (lista local)
       const updatedActions = actions.filter((_, i) => i !== index);
       onActionsChange(updatedActions);
 
@@ -171,7 +204,7 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
       console.error('Erro ao excluir ação:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível excluir a ação.",
+        description: "Erro inesperado ao tentar remover a ação.",
         variant: "destructive"
       });
     }

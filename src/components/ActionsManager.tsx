@@ -31,16 +31,21 @@ export const ActionsManager = ({
     setLoading(true);
     try {
       if (editingAction) {
-        // Edit update: obrigatório program_id
         const { error } = await supabase
           .from("actions")
           .update({
             nome: actionData.nome,
             produto: actionData.produto,
             unidade_medida: actionData.unidadeMedida,
-            meta_fisica: actionData.metaFisica,
-            orcamento: actionData.orcamento,
             fonte: actionData.fonte,
+            meta_fisica_2026: actionData.metaFisica2026,
+            meta_fisica_2027: actionData.metaFisica2027,
+            meta_fisica_2028: actionData.metaFisica2028,
+            meta_fisica_2029: actionData.metaFisica2029,
+            orcamento_2026: actionData.orcamento2026,
+            orcamento_2027: actionData.orcamento2027,
+            orcamento_2028: actionData.orcamento2028,
+            orcamento_2029: actionData.orcamento2029,
             program_id: programId,
           })
           .eq("id", editingAction.id);
@@ -48,22 +53,29 @@ export const ActionsManager = ({
         if (error) throw error;
 
         const updatedActions = actions.map((a) =>
-          a.id === editingAction.id ? { ...a, ...actionData } as Action : a
+          a.id === editingAction.id
+            ? { ...a, ...actionData }
+            : a
         );
         onActionsChange(updatedActions);
         toast({ title: "Ação atualizada com sucesso!" });
         setEditingAction(null);
       } else {
-        // Novo registro com program_id
         const { data, error } = await supabase
           .from("actions")
           .insert({
             nome: actionData.nome,
             produto: actionData.produto,
             unidade_medida: actionData.unidadeMedida,
-            meta_fisica: actionData.metaFisica,
-            orcamento: actionData.orcamento,
             fonte: actionData.fonte,
+            meta_fisica_2026: actionData.metaFisica2026,
+            meta_fisica_2027: actionData.metaFisica2027,
+            meta_fisica_2028: actionData.metaFisica2028,
+            meta_fisica_2029: actionData.metaFisica2029,
+            orcamento_2026: actionData.orcamento2026,
+            orcamento_2027: actionData.orcamento2027,
+            orcamento_2028: actionData.orcamento2028,
+            orcamento_2029: actionData.orcamento2029,
             program_id: programId,
           })
           .select()
@@ -77,19 +89,23 @@ export const ActionsManager = ({
           nome: data.nome,
           produto: data.produto,
           unidadeMedida: data.unidade_medida,
-          metaFisica: data.meta_fisica,
-          orcamento: data.orcamento,
           fonte: data.fonte,
+          metaFisica2026: data.meta_fisica_2026,
+          metaFisica2027: data.meta_fisica_2027,
+          metaFisica2028: data.meta_fisica_2028,
+          metaFisica2029: data.meta_fisica_2029,
+          orcamento2026: data.orcamento_2026,
+          orcamento2027: data.orcamento_2027,
+          orcamento2028: data.orcamento_2028,
+          orcamento2029: data.orcamento_2029,
         };
 
-        // -------- Sinaliza idea como utilizada (is_used = true) ----------
         if (newAction.nome) {
           await supabase
             .from('ideas')
             .update({ is_used: true })
             .eq('titulo', newAction.nome);
         }
-        // ---------------------------------------------------------------
 
         onActionsChange([...actions, newAction]);
         toast({ title: "Ação adicionada!" });

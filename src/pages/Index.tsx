@@ -16,9 +16,16 @@ export interface Action {
   nome: string;
   produto: string;
   unidadeMedida: string;
-  metaFisica: string;
-  orcamento: string;
   fonte: string;
+  // Novos campos plurianuais
+  metaFisica2026?: string;
+  metaFisica2027?: string;
+  metaFisica2028?: string;
+  metaFisica2029?: string;
+  orcamento2026?: string;
+  orcamento2027?: string;
+  orcamento2028?: string;
+  orcamento2029?: string;
 }
 
 export interface Program {

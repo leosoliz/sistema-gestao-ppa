@@ -15,8 +15,16 @@ export type Database = {
           fonte: string | null
           id: string
           meta_fisica: string
+          meta_fisica_2026: string | null
+          meta_fisica_2027: string | null
+          meta_fisica_2028: string | null
+          meta_fisica_2029: string | null
           nome: string
           orcamento: string | null
+          orcamento_2026: string | null
+          orcamento_2027: string | null
+          orcamento_2028: string | null
+          orcamento_2029: string | null
           produto: string | null
           program_id: string
           unidade_medida: string
@@ -26,8 +34,16 @@ export type Database = {
           fonte?: string | null
           id?: string
           meta_fisica: string
+          meta_fisica_2026?: string | null
+          meta_fisica_2027?: string | null
+          meta_fisica_2028?: string | null
+          meta_fisica_2029?: string | null
           nome: string
           orcamento?: string | null
+          orcamento_2026?: string | null
+          orcamento_2027?: string | null
+          orcamento_2028?: string | null
+          orcamento_2029?: string | null
           produto?: string | null
           program_id: string
           unidade_medida: string
@@ -37,8 +53,16 @@ export type Database = {
           fonte?: string | null
           id?: string
           meta_fisica?: string
+          meta_fisica_2026?: string | null
+          meta_fisica_2027?: string | null
+          meta_fisica_2028?: string | null
+          meta_fisica_2029?: string | null
           nome?: string
           orcamento?: string | null
+          orcamento_2026?: string | null
+          orcamento_2027?: string | null
+          orcamento_2028?: string | null
+          orcamento_2029?: string | null
           produto?: string | null
           program_id?: string
           unidade_medida?: string

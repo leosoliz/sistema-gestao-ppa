@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+
+import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,27 +28,42 @@ export const ActionForm = ({
   onSaveToIdeasBank,
   onCancel,
 }: ActionFormProps) => {
+  // Estado inicial com campos plurianuais
   const [currentAction, setCurrentAction] = useState<Partial<Action>>({
     nome: "",
     produto: "",
     unidadeMedida: "",
-    metaFisica: "",
-    orcamento: "",
     fonte: "",
+    metaFisica2026: "",
+    metaFisica2027: "",
+    metaFisica2028: "",
+    metaFisica2029: "",
+    orcamento2026: "",
+    orcamento2027: "",
+    orcamento2028: "",
+    orcamento2029: "",
   });
   const { toast } = useToast();
 
   useEffect(() => {
     if (editingAction) {
-      setCurrentAction(editingAction);
+      setCurrentAction({
+        ...editingAction,
+      });
     } else {
       setCurrentAction({
         nome: "",
         produto: "",
         unidadeMedida: "",
-        metaFisica: "",
-        orcamento: "",
         fonte: "",
+        metaFisica2026: "",
+        metaFisica2027: "",
+        metaFisica2028: "",
+        metaFisica2029: "",
+        orcamento2026: "",
+        orcamento2027: "",
+        orcamento2028: "",
+        orcamento2029: "",
       });
     }
   }, [editingAction]);
@@ -62,8 +78,30 @@ export const ActionForm = ({
     });
   };
 
+  const parseCurrency = (value: string) => {
+    if (!value) return 0;
+    // Remove tudo exceto números, vírgula e ponto
+    const numeric = value.replace(/[^\d,]/g, '').replace(',', '.');
+    return parseFloat(numeric) || 0;
+  };
+
+  // Calcule o total dos quatro anos
+  const totalOrcamento = useMemo(() => {
+    return [
+      currentAction.orcamento2026,
+      currentAction.orcamento2027,
+      currentAction.orcamento2028,
+      currentAction.orcamento2029,
+    ].reduce((total, orc) => total + parseCurrency(orc || ""), 0);
+  }, [
+    currentAction.orcamento2026,
+    currentAction.orcamento2027,
+    currentAction.orcamento2028,
+    currentAction.orcamento2029,
+  ]);
+
   const handleInputChange = (field: keyof Action, value: string) => {
-    if (field === "orcamento") {
+    if (field.startsWith("orcamento")) {
       const formattedValue = formatCurrency(value);
       setCurrentAction((prev) => ({ ...prev, [field]: formattedValue }));
     } else {
@@ -78,9 +116,15 @@ export const ActionForm = ({
         nome: selectedIdea.nome,
         produto: selectedIdea.produto,
         unidadeMedida: selectedIdea.unidadeMedida,
-        metaFisica: "",
-        orcamento: "",
         fonte: "",
+        metaFisica2026: "",
+        metaFisica2027: "",
+        metaFisica2028: "",
+        metaFisica2029: "",
+        orcamento2026: "",
+        orcamento2027: "",
+        orcamento2028: "",
+        orcamento2029: "",
       });
     }
   };
@@ -131,6 +175,7 @@ export const ActionForm = ({
             </Select>
           </div>
         )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="nomeAcao">Nome da Ação *</Label>
@@ -163,26 +208,6 @@ export const ActionForm = ({
             />
           </div>
           <div>
-            <Label htmlFor="metaFisica">Meta Física</Label>
-            <Input
-              id="metaFisica"
-              value={currentAction.metaFisica || ""}
-              onChange={(e) => handleInputChange("metaFisica", e.target.value)}
-              placeholder="Meta física"
-              disabled={loading}
-            />
-          </div>
-          <div>
-            <Label htmlFor="orcamento">Orçamento (R$)</Label>
-            <Input
-              id="orcamento"
-              value={currentAction.orcamento || ""}
-              onChange={(e) => handleInputChange("orcamento", e.target.value)}
-              placeholder="R$ 0,00"
-              disabled={loading}
-            />
-          </div>
-          <div>
             <Label htmlFor="fonte">Fonte</Label>
             <Input
               id="fonte"
@@ -193,7 +218,104 @@ export const ActionForm = ({
             />
           </div>
         </div>
-        <div className="flex space-x-2">
+
+        <div className="bg-green-100/50 border border-green-300 p-3 rounded space-y-3 mt-2">
+          <div className="font-medium text-green-700 mb-2">Metas Físicas Plurianuais</div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+            <div>
+              <Label htmlFor="meta2026">Meta Física 2026</Label>
+              <Input
+                id="meta2026"
+                value={currentAction.metaFisica2026 || ""}
+                onChange={e => handleInputChange("metaFisica2026", e.target.value)}
+                placeholder="Valor"
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <Label htmlFor="meta2027">Meta Física 2027</Label>
+              <Input
+                id="meta2027"
+                value={currentAction.metaFisica2027 || ""}
+                onChange={e => handleInputChange("metaFisica2027", e.target.value)}
+                placeholder="Valor"
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <Label htmlFor="meta2028">Meta Física 2028</Label>
+              <Input
+                id="meta2028"
+                value={currentAction.metaFisica2028 || ""}
+                onChange={e => handleInputChange("metaFisica2028", e.target.value)}
+                placeholder="Valor"
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <Label htmlFor="meta2029">Meta Física 2029</Label>
+              <Input
+                id="meta2029"
+                value={currentAction.metaFisica2029 || ""}
+                onChange={e => handleInputChange("metaFisica2029", e.target.value)}
+                placeholder="Valor"
+                disabled={loading}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-blue-100/50 border border-blue-300 p-3 rounded space-y-3">
+          <div className="font-medium text-blue-700 mb-2">Orçamentos Plurianuais</div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+            <div>
+              <Label htmlFor="orcamento2026">Orçamento 2026 (R$)</Label>
+              <Input
+                id="orcamento2026"
+                value={currentAction.orcamento2026 || ""}
+                onChange={e => handleInputChange("orcamento2026", e.target.value)}
+                placeholder="R$ 0,00"
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <Label htmlFor="orcamento2027">Orçamento 2027 (R$)</Label>
+              <Input
+                id="orcamento2027"
+                value={currentAction.orcamento2027 || ""}
+                onChange={e => handleInputChange("orcamento2027", e.target.value)}
+                placeholder="R$ 0,00"
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <Label htmlFor="orcamento2028">Orçamento 2028 (R$)</Label>
+              <Input
+                id="orcamento2028"
+                value={currentAction.orcamento2028 || ""}
+                onChange={e => handleInputChange("orcamento2028", e.target.value)}
+                placeholder="R$ 0,00"
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <Label htmlFor="orcamento2029">Orçamento 2029 (R$)</Label>
+              <Input
+                id="orcamento2029"
+                value={currentAction.orcamento2029 || ""}
+                onChange={e => handleInputChange("orcamento2029", e.target.value)}
+                placeholder="R$ 0,00"
+                disabled={loading}
+              />
+            </div>
+          </div>
+          <div className="bg-white border border-blue-200 px-4 py-2 rounded mt-2 flex flex-col md:flex-row md:items-center md:justify-between">
+            <span className="font-semibold text-blue-900">Orçamento Total (2026-2029):</span>
+            <span className="text-xl font-bold text-blue-800">{totalOrcamento.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
+          </div>
+        </div>
+
+        <div className="flex space-x-2 mt-2">
           <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700" disabled={loading}>
             <Plus className="h-4 w-4 mr-2" />
             {editingAction ? "Salvar Alterações" : "Adicionar Ação"}

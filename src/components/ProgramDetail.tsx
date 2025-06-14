@@ -1,16 +1,14 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Target, Sheet } from "lucide-react";
+import { FileText, Target } from "lucide-react";
 import { Program, Idea } from "@/pages/Index";
 import { ProgramEditForm } from "./ProgramEditForm";
 import { ProgramHeader } from "./ProgramHeader";
 import { ProgramInfoTab } from "./ProgramInfoTab";
 import { generateProgramPDF } from "@/utils/pdfGenerator";
-import { ActionsManager } from "./ActionsManager"; // Corrigido o import!
+import { ActionsManager } from "./ActionsManager";
 import { generateProgramExcel } from "@/utils/excelGenerator";
-import { Button } from "@/components/ui/button";
 
 interface ProgramDetailProps {
   program: Program;
@@ -66,13 +64,8 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank, refr
           totalOrcamento={totalOrcamento}
           onEdit={() => setIsEditing(true)}
           onGeneratePDF={handleGeneratePDF}
+          onGenerateExcel={handleGenerateExcel}
         />
-        <div className="px-6 pb-4 -mt-6 flex justify-end">
-            <Button onClick={handleGenerateExcel} variant="outline" size="sm" className="bg-white/80 backdrop-blur-sm">
-                <Sheet className="h-4 w-4 mr-2" />
-                Exportar para Excel
-            </Button>
-        </div>
       </Card>
 
       <Tabs defaultValue="info" className="space-y-6">

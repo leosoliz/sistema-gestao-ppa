@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Calendar, Printer } from "lucide-react";
+import { Edit, Calendar, Printer, Sheet } from "lucide-react";
 import { Program } from "@/pages/Index";
 
 interface ProgramHeaderProps {
@@ -10,9 +10,10 @@ interface ProgramHeaderProps {
   totalOrcamento: number;
   onEdit: () => void;
   onGeneratePDF: () => void;
+  onGenerateExcel: () => void;
 }
 
-export const ProgramHeader = ({ program, totalOrcamento, onEdit, onGeneratePDF }: ProgramHeaderProps) => {
+export const ProgramHeader = ({ program, totalOrcamento, onEdit, onGeneratePDF, onGenerateExcel }: ProgramHeaderProps) => {
   return (
     <CardHeader>
       <div className="flex justify-between items-start">
@@ -24,11 +25,19 @@ export const ProgramHeader = ({ program, totalOrcamento, onEdit, onGeneratePDF }
             {program.secretaria} - {program.departamento}
           </CardDescription>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={onGenerateExcel} 
+            variant="outline"
+            className="border-green-600 text-green-600 hover:bg-green-50"
+          >
+            <Sheet className="h-4 w-4 mr-2" />
+            Exportar Excel
+          </Button>
           <Button 
             onClick={onGeneratePDF} 
             variant="outline"
-            className="border-green-600 text-green-600 hover:bg-green-50"
+            className="border-red-600 text-red-600 hover:bg-red-50"
           >
             <Printer className="h-4 w-4 mr-2" />
             Imprimir PDF

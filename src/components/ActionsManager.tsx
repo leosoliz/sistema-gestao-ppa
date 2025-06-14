@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Trash, Edit } from "lucide-react";
 import { Action, Idea } from "@/pages/Index";
 import { markIdeaAsAvailableWhenRemovedFromProgram } from "@/utils/ideaSyncUtils";
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface ActionsManagerProps {
   actions: Action[];
@@ -26,6 +27,7 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
     fonte: "",
   });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const { toast } = useToast();
 
   const formatCurrency = (value: string) => {
     // Remove todos os caracteres não numéricos
@@ -137,12 +139,42 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
   const deleteAction = async (index: number) => {
     const actionToDelete = actions[index];
     
-    // Primeiro, marcar a ideia correspondente como não utilizada
-    await markIdeaAsAvailableWhenRemovedFromProgram(actionToDelete.nome, actionToDelete.produto);
-    
-    // Depois, remover a ação da lista e atualizar a interface
-    const updatedActions = actions.filter((_, i) => i !== index);
-    onActionsChange(updatedActions);
+    try {
+      // Primeiro, excluir a ação da base de dados
+      const { error } = await supabase
+        .from('actions')
+        .delete()
+        .eq('id', actionToDelete.id);
+
+      if (error) {
+        console.error('Erro ao excluir ação:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível excluir a ação.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Depois, marcar a ideia correspondente como não utilizada
+      await markIdeaAsAvailableWhenRemovedFromProgram(actionToDelete.nome, actionToDelete.produto);
+      
+      // Por fim, remover a ação da lista local e atualizar a interface
+      const updatedActions = actions.filter((_, i) => i !== index);
+      onActionsChange(updatedActions);
+
+      toast({
+        title: "Ação excluída",
+        description: "A ação foi removida com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao excluir ação:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir a ação.",
+        variant: "destructive"
+      });
+    }
   };
 
   const saveToIdeasBank = () => {

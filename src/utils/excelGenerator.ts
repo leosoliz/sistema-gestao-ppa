@@ -33,15 +33,17 @@ export const generateProgramExcel = (program: Program) => {
     const wsInfo = XLSX.utils.aoa_to_sheet(programInfoData);
     
     wsInfo['!cols'] = [{ wch: 20 }, { wch: 120 }];
-    wsInfo['!rows'] = programInfoData.map(row => (row[0] && typeof row[0] === 'object' && row[1]) ? { hpt: Math.ceil(String(row[1]).length / 120) * 15 } : { hpt: 15 } );
-    wsInfo["A9"].s.alignment = { wrapText: true };
-    wsInfo["A11"].s.alignment = { wrapText: true };
-    wsInfo["A13"].s.alignment = { wrapText: true };
-    wsInfo["A15"].s.alignment = { wrapText: true };
-    wsInfo["B9"].s.alignment = { wrapText: true };
-    wsInfo["B11"].s.alignment = { wrapText: true };
-    wsInfo["B13"].s.alignment = { wrapText: true };
-    wsInfo["B15"].s.alignment = { wrapText: true };
+    wsInfo['!rows'] = programInfoData.map(row => (row[0] && typeof row[0] === 'object' && row[1]) ? { hpt: Math.ceil(String(row[1] || '').length / 120) * 15 } : { hpt: 15 } );
+    
+    const cellsToWrap = ["A9", "B9", "A11", "B11", "A13", "B13", "A15", "B15"];
+    cellsToWrap.forEach(cellRef => {
+        const cell = wsInfo[cellRef];
+        if (cell) {
+            if (!cell.s) cell.s = {};
+            cell.s.alignment = { ...cell.s.alignment, wrapText: true, vertical: 'top' };
+        }
+    });
+    
     wsInfo['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
 
 

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash, Edit } from "lucide-react";
 import { Action, Idea } from "@/pages/Index";
+import { markIdeaAsAvailableWhenRemovedFromProgram } from "@/utils/ideaSyncUtils";
 
 interface ActionsManagerProps {
   actions: Action[];
@@ -133,8 +133,13 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
     });
   };
 
-  const deleteAction = (index: number) => {
+  const deleteAction = async (index: number) => {
+    const actionToDelete = actions[index];
     const updatedActions = actions.filter((_, i) => i !== index);
+    
+    // Marcar a ideia correspondente como não utilizada
+    await markIdeaAsAvailableWhenRemovedFromProgram(actionToDelete.nome, actionToDelete.produto);
+    
     onActionsChange(updatedActions);
   };
 

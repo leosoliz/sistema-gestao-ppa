@@ -13,7 +13,8 @@ interface ActionsManagerProps {
   ideas: Idea[];
   onAddToIdeasBank: (idea: Omit<Idea, "id" | "createdAt">) => void;
   programId: string;
-  refreshIdeas: () => void; // ADDED
+  refreshIdeas: () => void;
+  refreshPrograms: () => void;
 }
 
 export const ActionsManager = ({
@@ -22,8 +23,9 @@ export const ActionsManager = ({
   ideas,
   onAddToIdeasBank,
   programId,
-  refreshIdeas, // ADDED
-}: any) => {
+  refreshIdeas,
+  refreshPrograms
+}: ActionsManagerProps) => {
   const [editingAction, setEditingAction] = useState<Action | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -64,6 +66,7 @@ export const ActionsManager = ({
         onActionsChange(updatedActions);
         toast({ title: "Ação atualizada com sucesso!" });
         setEditingAction(null);
+        if (refreshPrograms) refreshPrograms();
       } else {
         const { data, error } = await supabase
           .from("actions")
@@ -111,11 +114,12 @@ export const ActionsManager = ({
             .from('ideas')
             .update({ is_used: true })
             .eq('titulo', newAction.nome);
-          if (refreshIdeas) refreshIdeas(); // Atualiza listbox após marcar a ideia como usada
+          if (refreshIdeas) refreshIdeas();
         }
 
         onActionsChange([...actions, newAction]);
         toast({ title: "Ação adicionada!" });
+        if (refreshPrograms) refreshPrograms();
       }
     } catch (error: any) {
       toast({
@@ -137,12 +141,13 @@ export const ActionsManager = ({
           .from('ideas')
           .update({ is_used: false })
           .eq('titulo', action.nome);
-        if (refreshIdeas) refreshIdeas(); // Atualiza listbox após liberar a ideia
+        if (refreshIdeas) refreshIdeas();
       }
 
       await markIdeaAsAvailableWhenRemovedFromProgram(action.nome, action.produto);
       onActionsChange(actions.filter((a) => a.id !== action.id));
       toast({ title: "Ação excluída!" });
+      if (refreshPrograms) refreshPrograms();
     } catch (error: any) {
       toast({
         title: "Erro ao excluir ação",

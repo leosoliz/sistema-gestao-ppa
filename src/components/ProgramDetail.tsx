@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,9 +14,11 @@ interface ProgramDetailProps {
   ideas: Idea[];
   onUpdate: (program: Program) => void;
   onAddToIdeasBank: (idea: Omit<Idea, "id" | "createdAt">) => void;
+  refreshPrograms: () => void;
+  refreshIdeas: () => void;
 }
 
-export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: ProgramDetailProps) => {
+export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank, refreshPrograms, refreshIdeas }: ProgramDetailProps) => {
   const [isEditing, setIsEditing] = useState(false);
 
   const calculateTotal = (acao) => {
@@ -76,7 +77,15 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: Pr
         </TabsContent>
 
         <TabsContent value="acoes" className="space-y-6">
-          <ProgramActionsTab program={program} />
+          <ActionsManager
+            actions={program.acoes}
+            onActionsChange={() => refreshPrograms()} // Quando houver mudanças, recarregue os programas do backend!
+            ideas={ideas}
+            onAddToIdeasBank={onAddToIdeasBank}
+            programId={program.id}
+            refreshIdeas={refreshIdeas}
+            refreshPrograms={refreshPrograms} // Prop novo!
+          />
         </TabsContent>
       </Tabs>
     </div>

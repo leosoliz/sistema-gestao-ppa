@@ -55,7 +55,7 @@ const Index = () => {
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
   
-  const { programs, loading: programsLoading, addProgram, updateProgram, deleteProgram } = usePrograms();
+  const { programs, loading: programsLoading, addProgram, updateProgram, deleteProgram, refreshPrograms } = usePrograms();
   const { ideas, loading: ideasLoading, addIdea, deleteIdea, updateIdea, markIdeaAsUsed, syncIdeasUsageStatus, refreshIdeas } = useIdeas();
   const { eixos, loading: eixosLoading } = useEixos();
 
@@ -74,6 +74,7 @@ const Index = () => {
   const handleUpdateProgram = (updatedProgram: Program) => {
     updateProgram(updatedProgram);
     setSelectedProgram(updatedProgram);
+    refreshPrograms(); // Atualiza lista após edição! Opcional, mas recomendado para sincronia
   };
 
   // Novo cálculo do orçamento total usando todos os anos das ações:
@@ -275,6 +276,8 @@ const Index = () => {
                 ideas={ideas}
                 onUpdate={handleUpdateProgram}
                 onAddToIdeasBank={addIdea}
+                refreshPrograms={refreshPrograms} // NOVO!
+                refreshIdeas={refreshIdeas}
               />
             )}
           </TabsContent>

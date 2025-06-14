@@ -12,9 +12,13 @@ interface ProgramListProps {
 }
 
 export const ProgramList = ({ programs, onView, onDelete }: ProgramListProps) => {
+  // Calcula o orçamento total do programa somando os orçamentos de todos os anos das actions
   const calculateProgramBudget = (program: Program) => {
     return program.acoes.reduce((total, action) => {
-      const budget = parseFloat(action.orcamento?.replace(/[^\d,]/g, '').replace(',', '.') || '0');
+      const vals = [action.orcamento2026, action.orcamento2027, action.orcamento2028, action.orcamento2029].map(
+        v => parseFloat((v || "0").replace(/[^\d,]/g, '').replace(',', '.') || '0')
+      );
+      const budget = vals.reduce((s, v) => s + v, 0);
       return total + budget;
     }, 0);
   };

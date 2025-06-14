@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import { Program } from '@/pages/Index';
 
@@ -159,7 +158,13 @@ export const generateProgramPDF = (program: Program) => {
   yPosition += infoBoxHeight + 15;
 
   // Orçamento total em destaque (se houver)
-  const totalOrcamento = program.acoes.reduce((total, acao) => total + calculateTotal(acao.orcamento), 0);
+  const calculateActionTotal = (acao) => {
+    const vals = [acao.orcamento2026, acao.orcamento2027, acao.orcamento2028, acao.orcamento2029].map(
+      v => parseFloat((v || "0").replace(/[^\d,]/g, '').replace(',', '.') || "0")
+    );
+    return vals.reduce((s, v) => s + v, 0);
+  };
+  const totalOrcamento = program.acoes.reduce((total, acao) => total + calculateActionTotal(acao), 0);
   if (totalOrcamento > 0) {
     pdf.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
     pdf.setLineWidth(0.5);
@@ -262,15 +267,21 @@ export const generateProgramPDF = (program: Program) => {
       pdf.setFont("helvetica", "bold");
       pdf.text("Meta:", col1X, detailY);
       pdf.setFont("helvetica", "normal");
-      pdf.text(`${acao.metaFisica} ${acao.unidadeMedida}`, col1X + 16, detailY);
-      
-      if (acao.orcamento) {
-        pdf.setFont("helvetica", "bold");
-        pdf.text("Orçamento:", col2X, detailY);
-        pdf.setFont("helvetica", "normal");
-        pdf.text(acao.orcamento, col2X + 26, detailY);
-      }
-      
+      pdf.text(
+        `2026: ${acao.metaFisica2026 || "-"} | 2027: ${acao.metaFisica2027 || "-"} | 2028: ${acao.metaFisica2028 || "-"} | 2029: ${acao.metaFisica2029 || "-"}` +
+        (acao.unidadeMedida ? ` ${acao.unidadeMedida}` : ""),
+        col1X + 16, detailY
+      );
+
+      // Orçamentos multi-ano
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Orçamento:", col2X, detailY);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(
+        `2026: ${acao.orcamento2026 || "-"} | 2027: ${acao.orcamento2027 || "-"} | 2028: ${acao.orcamento2028 || "-"} | 2029: ${acao.orcamento2029 || "-"} (Total: ${calculateActionTotal(acao).toLocaleString("pt-BR", { style: "currency", currency: "BRL })})`,
+        col2X + 26, detailY
+      );
+
       detailY += 5;
       if (acao.fonte) {
         pdf.setFont("helvetica", "bold");
@@ -278,7 +289,7 @@ export const generateProgramPDF = (program: Program) => {
         pdf.setFont("helvetica", "normal");
         pdf.text(acao.fonte, col1X + 16, detailY);
       }
-      
+
       yPosition += cardHeight + 5;
     });
   }

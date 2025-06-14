@@ -10,6 +10,28 @@ interface ProgramActionsTabProps {
   program: Program;
 }
 
+function resumoMetas(a) {
+  return [
+    `2026: ${a.metaFisica2026 || "-"}`,
+    `2027: ${a.metaFisica2027 || "-"}`,
+    `2028: ${a.metaFisica2028 || "-"}`,
+    `2029: ${a.metaFisica2029 || "-"}`
+  ].join(" | ");
+}
+
+function resumoOrcamento(a) {
+  const vals = [a.orcamento2026, a.orcamento2027, a.orcamento2028, a.orcamento2029].map(
+    v => parseFloat((v || "0").replace(/[^\d,]/g, '').replace(',', '.'))
+  );
+  const total = vals.reduce((s, v) => s + v, 0);
+  return [
+    `2026: ${a.orcamento2026 || "-"}`,
+    `2027: ${a.orcamento2027 || "-"}`,
+    `2028: ${a.orcamento2028 || "-"}`,
+    `2029: ${a.orcamento2029 || "-"}`
+  ].join(" | ") + `\nTotal: ${total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`;
+}
+
 export const ProgramActionsTab = ({ program }: ProgramActionsTabProps) => {
   const { programs } = usePrograms();
 
@@ -29,7 +51,6 @@ export const ProgramActionsTab = ({ program }: ProgramActionsTabProps) => {
     <div className="space-y-4">
       {program.acoes.map((acao, index) => {
         const usageInfo = getActionUsageInfo(acao, program.id, programs);
-        
         return (
           <Card key={acao.id} className="border-l-4 border-l-green-500">
             <CardHeader>
@@ -71,23 +92,20 @@ export const ProgramActionsTab = ({ program }: ProgramActionsTabProps) => {
                 </div>
               </div>
             </CardHeader>
-            
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <h4 className="font-medium text-gray-700 mb-1">Meta Física</h4>
-                  <p className="text-gray-600">
-                    {acao.metaFisica} {acao.unidadeMedida}
+                  <p className="text-gray-600 text-sm whitespace-pre-line">
+                    {resumoMetas(acao)} {acao.unidadeMedida}
                   </p>
                 </div>
-                
                 <div>
                   <h4 className="font-medium text-gray-700 mb-1">Orçamento</h4>
-                  <p className="text-gray-600 font-medium">
-                    {acao.orcamento || "Não informado"}
+                  <p className="text-gray-600 font-medium text-sm whitespace-pre-line">
+                    {resumoOrcamento(acao)}
                   </p>
                 </div>
-                
                 <div>
                   <h4 className="font-medium text-gray-700 mb-1">Fonte</h4>
                   <p className="text-gray-600">

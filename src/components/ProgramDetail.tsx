@@ -20,11 +20,12 @@ interface ProgramDetailProps {
 export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: ProgramDetailProps) => {
   const [isEditing, setIsEditing] = useState(false);
 
-  const calculateTotal = (orcamento: string) => {
-    if (!orcamento) return 0;
-    // Remove formatação da moeda e converte para número
-    const cleaned = orcamento.replace(/[^\d,]/g, '').replace(',', '.');
-    return parseFloat(cleaned) || 0;
+  const calculateTotal = (acao) => {
+    // Soma os 4 anos de orçamento da action:
+    const vals = [acao.orcamento2026, acao.orcamento2027, acao.orcamento2028, acao.orcamento2029].map(
+      v => parseFloat((v || "0").replace(/[^\d,]/g, '').replace(',', '.') || "0")
+    );
+    return vals.reduce((s, v) => s + v, 0);
   };
 
   const handleGeneratePDF = () => {
@@ -44,7 +45,7 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank }: Pr
   }
 
   const totalOrcamento = program.acoes.reduce((total, acao) => {
-    return total + calculateTotal(acao.orcamento);
+    return total + calculateTotal(acao);
   }, 0);
 
   return (

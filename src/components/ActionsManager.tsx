@@ -81,6 +81,16 @@ export const ActionsManager = ({
           orcamento: data.orcamento,
           fonte: data.fonte,
         };
+
+        // -------- Sinaliza idea como utilizada (is_used = true) ----------
+        if (newAction.nome) {
+          await supabase
+            .from('ideas')
+            .update({ is_used: true })
+            .eq('titulo', newAction.nome);
+        }
+        // ---------------------------------------------------------------
+
         onActionsChange([...actions, newAction]);
         toast({ title: "Ação adicionada!" });
       }
@@ -99,6 +109,16 @@ export const ActionsManager = ({
     try {
       // Remove do BD
       await supabase.from("actions").delete().eq("id", action.id);
+
+      // --------- Sinaliza idea como disponível (is_used = false) ----------
+      if (action.nome) {
+        await supabase
+          .from('ideas')
+          .update({ is_used: false })
+          .eq('titulo', action.nome);
+      }
+      // -------------------------------------------------------------------
+
       await markIdeaAsAvailableWhenRemovedFromProgram(action.nome, action.produto);
       onActionsChange(actions.filter((a) => a.id !== action.id));
       toast({ title: "Ação excluída!" });

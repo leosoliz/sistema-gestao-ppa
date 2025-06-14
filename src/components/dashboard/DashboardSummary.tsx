@@ -35,6 +35,8 @@ export const DashboardSummary = ({ programs, ideas, eixos }: DashboardSummaryPro
   }, { budget2026: 0, budget2027: 0, budget2028: 0, budget2029: 0 });
 
   const totalBudget = budgetByYear.budget2026 + budgetByYear.budget2027 + budgetByYear.budget2028 + budgetByYear.budget2029;
+  const usedIdeasCount = ideas.filter(idea => idea.isUsed).length;
+  const availableIdeasCount = ideas.length - usedIdeasCount;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
@@ -64,6 +66,16 @@ export const DashboardSummary = ({ programs, ideas, eixos }: DashboardSummaryPro
         </CardHeader>
         <CardContent>
           <p className="text-3xl font-bold">{ideas.length}</p>
+          <div className="text-xs mt-2 space-y-0.5">
+            <div className="flex justify-between items-center">
+              <span>Utilizadas:</span>
+              <span className="font-semibold">{usedIdeasCount}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>Disponíveis:</span>
+              <span className="font-semibold">{availableIdeasCount}</span>
+            </div>
+          </div>
         </CardContent>
       </Card>
 

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +9,7 @@ import { IdeasBank } from "@/components/IdeasBank";
 import { ProgramDetail } from "@/components/ProgramDetail";
 import { EixosManager } from "@/components/EixosManager";
 import { DashboardSummary } from "@/components/dashboard/DashboardSummary";
+import { BudgetByDepartmentChart } from "@/components/dashboard/BudgetByDepartmentChart";
 import { usePrograms } from "@/hooks/usePrograms";
 import { useIdeas } from "@/hooks/useIdeas";
 import { useEixos } from "@/hooks/useEixos";
@@ -177,6 +179,8 @@ const Index = () => {
 
           <TabsContent value="dashboard" className="space-y-6">
             <DashboardSummary programs={programs} ideas={ideas} eixos={eixos} />
+
+            <BudgetByDepartmentChart programs={programs} />
 
             <Card>
               <CardHeader>

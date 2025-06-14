@@ -40,6 +40,7 @@ export const ProgramEditForm = ({ program, ideas, onUpdate, onAddToIdeasBank, on
   const [isEixoDialogOpen, setIsEixoDialogOpen] = useState(false);
   
   const { eixos, addEixo } = useEixos();
+  const sortedEixos = [...eixos].sort((a, b) => a.nome.localeCompare(b.nome));
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -114,7 +115,7 @@ export const ProgramEditForm = ({ program, ideas, onUpdate, onAddToIdeasBank, on
                       <SelectValue placeholder="Selecione um eixo" />
                     </SelectTrigger>
                     <SelectContent>
-                      {eixos.map((eixo) => (
+                      {sortedEixos.map((eixo) => (
                         <SelectItem key={eixo.id} value={eixo.nome}>
                           {eixo.nome}
                         </SelectItem>

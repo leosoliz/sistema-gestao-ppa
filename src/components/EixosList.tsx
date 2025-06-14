@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +36,8 @@ export const EixosList = ({ eixos, onUpdate, onDelete }: EixosListProps) => {
     }
   };
 
+  const sortedEixos = [...eixos].sort((a, b) => a.nome.localeCompare(b.nome));
+
   if (eixos.length === 0) {
     return (
       <div className="text-center py-12">
@@ -59,7 +60,7 @@ export const EixosList = ({ eixos, onUpdate, onDelete }: EixosListProps) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {eixos.map((eixo) => (
+      {sortedEixos.map((eixo) => (
         <Card key={eixo.id} className={`hover:shadow-lg transition-shadow ${eixo.isUsed ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-gray-200'}`}>
           <CardHeader className="pb-3">
             <div className="flex justify-between items-start">

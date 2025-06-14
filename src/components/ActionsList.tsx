@@ -43,12 +43,14 @@ export const ActionsList = ({
   onEdit,
   onDelete,
 }: ActionsListProps) => {
+  const sortedActions = [...actions].sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
+
   if (!actions.length) return null;
   return (
     <div>
       <h3 className="text-lg font-medium mb-4">Ações Cadastradas ({actions.length})</h3>
       <div className="space-y-3">
-        {actions.map((action) => (
+        {sortedActions.map((action) => (
           <Card key={action.id} className="border-l-4 border-l-blue-500">
             <CardContent className="pt-4">
               <div className="flex justify-between items-start">

@@ -278,7 +278,7 @@ export const generateProgramPDF = (program: Program) => {
       pdf.text("Orçamento:", col2X, detailY);
       pdf.setFont("helvetica", "normal");
       pdf.text(
-        `2026: ${acao.orcamento2026 || "-"} | 2027: ${acao.orcamento2027 || "-"} | 2028: ${acao.orcamento2028 || "-"} | 2029: ${acao.orcamento2029 || "-"} (Total: ${calculateActionTotal(acao).toLocaleString("pt-BR", { style: "currency", currency: "BRL })})`,
+        `2026: ${acao.orcamento2026 || "-"} | 2027: ${acao.orcamento2027 || "-"} | 2028: ${acao.orcamento2028 || "-"} | 2029: ${acao.orcamento2029 || "-"} (Total: ${calculateActionTotal(acao).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })})`,
         col2X + 26, detailY
       );
 

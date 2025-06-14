@@ -210,6 +210,7 @@ export const ProgramForm = ({ onSubmit, ideas, onAddToIdeasBank }: ProgramFormPr
             onActionsChange={setAcoes}
             ideas={ideas}
             onAddToIdeasBank={onAddToIdeasBank}
+            programId="" // new programs don't have an ID yet
           />
         </CardContent>
       </Card>

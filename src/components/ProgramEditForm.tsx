@@ -207,6 +207,7 @@ export const ProgramEditForm = ({ program, ideas, onUpdate, onAddToIdeasBank, on
                 onActionsChange={setAcoes}
                 ideas={ideas}
                 onAddToIdeasBank={onAddToIdeasBank}
+                programId={program.id} // pass correct programId for editing
               />
             </CardContent>
           </Card>

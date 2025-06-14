@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,7 +90,7 @@ export const ActionForm = ({
       toast({ title: "Preencha o nome da ação" });
       return;
     }
-    await onSave({ ...currentAction, program_id: programId });
+    await onSave({ ...currentAction });
   };
 
   const handleSaveToIdeasBank = () => {

@@ -42,6 +42,8 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank, refr
         onUpdate={onUpdate}
         onAddToIdeasBank={onAddToIdeasBank}
         onCancel={() => setIsEditing(false)}
+        refreshPrograms={refreshPrograms}
+        refreshIdeas={refreshIdeas}
       />
     );
   }
@@ -92,4 +94,3 @@ export const ProgramDetail = ({ program, ideas, onUpdate, onAddToIdeasBank, refr
     </div>
   );
 };
-

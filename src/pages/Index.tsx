@@ -242,6 +242,8 @@ const Index = () => {
                   onSubmit={addProgram} 
                   ideas={ideas}
                   onAddToIdeasBank={addIdea}
+                  refreshPrograms={refreshPrograms}
+                  refreshIdeas={refreshIdeas}
                 />
               </CardContent>
             </Card>

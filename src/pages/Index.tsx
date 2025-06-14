@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -58,6 +59,23 @@ const Index = () => {
   const { programs, loading: programsLoading, addProgram, updateProgram, deleteProgram, refreshPrograms } = usePrograms();
   const { ideas, loading: ideasLoading, addIdea, deleteIdea, updateIdea, markIdeaAsUsed, syncIdeasUsageStatus, refreshIdeas } = useIdeas();
   const { eixos, loading: eixosLoading } = useEixos();
+
+  // Sync selectedProgram with the main programs list to reflect updates
+  useEffect(() => {
+    if (selectedProgram) {
+      const freshProgram = programs.find(p => p.id === selectedProgram.id);
+      if (freshProgram) {
+        // Use stringify for a simple deep comparison to prevent re-render loops.
+        if (JSON.stringify(selectedProgram) !== JSON.stringify(freshProgram)) {
+          setSelectedProgram(freshProgram);
+        }
+      } else {
+        // The program might have been deleted.
+        setSelectedProgram(null);
+        setActiveTab("dashboard");
+      }
+    }
+  }, [programs]);
 
   // Refresh ideas list when switching to ideas tab
   useEffect(() => {

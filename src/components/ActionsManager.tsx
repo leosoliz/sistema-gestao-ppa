@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -135,11 +136,12 @@ export const ActionsManager = ({ actions, onActionsChange, ideas, onAddToIdeasBa
 
   const deleteAction = async (index: number) => {
     const actionToDelete = actions[index];
-    const updatedActions = actions.filter((_, i) => i !== index);
     
-    // Marcar a ideia correspondente como não utilizada
+    // Primeiro, marcar a ideia correspondente como não utilizada
     await markIdeaAsAvailableWhenRemovedFromProgram(actionToDelete.nome, actionToDelete.produto);
     
+    // Depois, remover a ação da lista e atualizar a interface
+    const updatedActions = actions.filter((_, i) => i !== index);
     onActionsChange(updatedActions);
   };
 

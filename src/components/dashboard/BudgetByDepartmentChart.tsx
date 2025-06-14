@@ -1,7 +1,9 @@
 
+import { useMemo, useState } from "react";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { Program } from "@/pages/Index";
 
 const parseCurrency = (value: string | undefined | null): number => {
@@ -24,26 +26,45 @@ interface BudgetByDepartmentChartProps {
 }
 
 export const BudgetByDepartmentChart = ({ programs }: BudgetByDepartmentChartProps) => {
-  const budgetByDepartment = programs.reduce((acc, program) => {
-    const department = program.departamento || "Não especificado";
-    const programTotalBudget = program.acoes.reduce((sum, action) => {
-      return sum +
-        parseCurrency(action.orcamento2026) +
-        parseCurrency(action.orcamento2027) +
-        parseCurrency(action.orcamento2028) +
-        parseCurrency(action.orcamento2029);
-    }, 0);
+  const [view, setView] = useState<'department' | 'program'>('department');
 
-    if (!acc[department]) {
-      acc[department] = 0;
+  const chartData = useMemo(() => {
+    let data;
+
+    if (view === 'department') {
+      const budgetByDepartment = programs.reduce((acc, program) => {
+        const department = program.departamento || "Não especificado";
+        const programTotalBudget = program.acoes.reduce((sum, action) => {
+          return sum +
+            parseCurrency(action.orcamento2026) +
+            parseCurrency(action.orcamento2027) +
+            parseCurrency(action.orcamento2028) +
+            parseCurrency(action.orcamento2029);
+        }, 0);
+
+        if (!acc[department]) {
+          acc[department] = 0;
+        }
+        acc[department] += programTotalBudget;
+        return acc;
+      }, {} as Record<string, number>);
+
+      data = Object.entries(budgetByDepartment).map(([name, total]) => ({ name, total }));
+    } else {
+      data = programs.map(program => {
+        const total = program.acoes.reduce((sum, action) => {
+          return sum +
+            parseCurrency(action.orcamento2026) +
+            parseCurrency(action.orcamento2027) +
+            parseCurrency(action.orcamento2028) +
+            parseCurrency(action.orcamento2029);
+        }, 0);
+        return { name: program.programa, total };
+      });
     }
-    acc[department] += programTotalBudget;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const chartData = Object.entries(budgetByDepartment)
-    .map(([name, total]) => ({ name, total }))
-    .sort((a, b) => b.total - a.total);
+    
+    return data.sort((a, b) => b.total - a.total);
+  }, [programs, view]);
 
   const chartConfig = {
     total: {
@@ -56,11 +77,34 @@ export const BudgetByDepartmentChart = ({ programs }: BudgetByDepartmentChartPro
     return null;
   }
 
+  const cardTitle = view === 'department' ? 'Orçamento por Departamento' : 'Orçamento por Programa';
+  const cardDescription = view === 'department'
+    ? 'Distribuição de recursos entre os departamentos'
+    : 'Distribuição de recursos entre os programas';
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Orçamento por Departamento</CardTitle>
-        <CardDescription>Distribuição de recursos entre os departamentos</CardDescription>
+      <CardHeader className="flex-col sm:flex-row flex items-start justify-between gap-4">
+        <div>
+          <CardTitle>{cardTitle}</CardTitle>
+          <CardDescription>{cardDescription}</CardDescription>
+        </div>
+        <ToggleGroup
+          type="single"
+          defaultValue="department"
+          value={view}
+          onValueChange={(value) => {
+            if (value) setView(value as 'department' | 'program');
+          }}
+          className="bg-background"
+        >
+          <ToggleGroupItem value="department" aria-label="Ver por departamento">
+            Departamento
+          </ToggleGroupItem>
+          <ToggleGroupItem value="program" aria-label="Ver por programa">
+            Programa
+          </ToggleGroupItem>
+        </ToggleGroup>
       </CardHeader>
       <CardContent className="pl-2">
         <ChartContainer config={chartConfig} className="h-[350px] w-full">

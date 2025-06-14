@@ -58,22 +58,22 @@ export type Database = {
           created_at: string
           descricao: string | null
           id: string
-          nome: string
           is_used: boolean
+          nome: string
         }
         Insert: {
           created_at?: string
           descricao?: string | null
           id?: string
+          is_used?: boolean
           nome: string
-          is_used: boolean
         }
         Update: {
           created_at?: string
           descricao?: string | null
           id?: string
+          is_used?: boolean
           nome?: string
-          is_used: boolean
         }
         Relationships: []
       }

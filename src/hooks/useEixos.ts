@@ -22,6 +22,7 @@ export const useEixos = () => {
         id: eixo.id,
         nome: eixo.nome,
         descricao: eixo.descricao || '',
+        isUsed: eixo.is_used || false,
         createdAt: new Date(eixo.created_at)
       }));
 
@@ -38,13 +39,14 @@ export const useEixos = () => {
     }
   };
 
-  const addEixo = async (eixo: Omit<Eixo, "id" | "createdAt">) => {
+  const addEixo = async (eixo: Omit<Eixo, "id" | "createdAt" | "isUsed">) => {
     try {
       const { error } = await supabase
         .from('eixos')
         .insert({
           nome: eixo.nome,
-          descricao: eixo.descricao
+          descricao: eixo.descricao,
+          is_used: false
         });
 
       if (error) throw error;
@@ -54,7 +56,7 @@ export const useEixos = () => {
         description: "O eixo foi cadastrado com sucesso!",
       });
 
-      loadEixos();
+      await loadEixos();
     } catch (error) {
       console.error('Erro ao adicionar eixo:', error);
       toast({
@@ -82,7 +84,7 @@ export const useEixos = () => {
         description: "As alterações foram salvas com sucesso!",
       });
 
-      loadEixos();
+      await loadEixos();
     } catch (error) {
       console.error('Erro ao atualizar eixo:', error);
       toast({
@@ -95,6 +97,17 @@ export const useEixos = () => {
 
   const deleteEixo = async (eixoId: string) => {
     try {
+      // Verificar se o eixo está sendo usado
+      const eixoToDelete = eixos.find(e => e.id === eixoId);
+      if (eixoToDelete?.isUsed) {
+        toast({
+          title: "Não é possível excluir",
+          description: "Este eixo está sendo utilizado em programas ativos.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('eixos')
         .delete()
@@ -107,7 +120,7 @@ export const useEixos = () => {
         description: "O eixo foi removido com sucesso!",
       });
 
-      loadEixos();
+      await loadEixos();
     } catch (error) {
       console.error('Erro ao excluir eixo:', error);
       toast({
@@ -115,6 +128,40 @@ export const useEixos = () => {
         description: "Não foi possível excluir o eixo.",
         variant: "destructive"
       });
+    }
+  };
+
+  const syncEixosUsageStatus = async () => {
+    try {
+      // Primeiro, marca todos os eixos como não utilizados
+      const { error: resetError } = await supabase
+        .from('eixos')
+        .update({ is_used: false });
+
+      if (resetError) throw resetError;
+
+      // Depois, busca todos os programas para marcar os eixos correspondentes como utilizados
+      const { data: programs, error: programsError } = await supabase
+        .from('programs')
+        .select('eixo');
+
+      if (programsError) throw programsError;
+
+      if (programs && programs.length > 0) {
+        // Para cada programa, marca o eixo correspondente como utilizado
+        const uniqueEixos = [...new Set(programs.map(p => p.eixo).filter(Boolean))];
+        
+        for (const eixoName of uniqueEixos) {
+          await supabase
+            .from('eixos')
+            .update({ is_used: true })
+            .eq('nome', eixoName);
+        }
+      }
+
+      await loadEixos();
+    } catch (error) {
+      console.error('Erro ao sincronizar status dos eixos:', error);
     }
   };
 
@@ -128,6 +175,7 @@ export const useEixos = () => {
     addEixo,
     updateEixo,
     deleteEixo,
+    syncEixosUsageStatus,
     refreshEixos: loadEixos
   };
 };

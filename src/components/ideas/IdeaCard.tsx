@@ -115,7 +115,7 @@ export const IdeaCard = ({ idea, onDelete, onUpdate, onMarkAsUsed }: IdeaCardPro
             <Badge variant="outline" className="text-xs">{idea.categoria}</Badge>
             {isUsed && <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Em Uso</Badge>}
           </div>
-          <p className="text-xs text-gray-500">{idea.createdAt.toLocaleDate-String('pt-BR')}</p>
+          <p className="text-xs text-gray-500">{new Date(idea.createdAt).toLocaleDateString('pt-BR')}</p>
         </div>
       </CardContent>
     </Card>

@@ -13,6 +13,7 @@ interface ActionsManagerProps {
   ideas: Idea[];
   onAddToIdeasBank: (idea: Omit<Idea, "id" | "createdAt">) => void;
   programId: string;
+  refreshIdeas: () => void; // ADDED
 }
 
 export const ActionsManager = ({
@@ -21,6 +22,7 @@ export const ActionsManager = ({
   ideas,
   onAddToIdeasBank,
   programId,
+  refreshIdeas, // ADDED
 }: any) => {
   const [editingAction, setEditingAction] = useState<Action | null>(null);
   const [loading, setLoading] = useState(false);
@@ -47,7 +49,6 @@ export const ActionsManager = ({
             orcamento_2028: actionData.orcamento2028,
             orcamento_2029: actionData.orcamento2029,
             program_id: programId,
-            // Sempre enviar meta_fisica para satisfazer Supabase
             meta_fisica: [actionData.metaFisica2026, actionData.metaFisica2027, actionData.metaFisica2028, actionData.metaFisica2029].join(" / "),
             orcamento: [actionData.orcamento2026, actionData.orcamento2027, actionData.orcamento2028, actionData.orcamento2029].join(" / ")
           })
@@ -110,6 +111,7 @@ export const ActionsManager = ({
             .from('ideas')
             .update({ is_used: true })
             .eq('titulo', newAction.nome);
+          if (refreshIdeas) refreshIdeas(); // Atualiza listbox após marcar a ideia como usada
         }
 
         onActionsChange([...actions, newAction]);
@@ -128,21 +130,17 @@ export const ActionsManager = ({
   const handleDelete = async (action: Action) => {
     setLoading(true);
     try {
-      // Remove do BD
       await supabase.from("actions").delete().eq("id", action.id);
 
-      // Sinaliza idea como disponível (is_used = false)
       if (action.nome) {
         await supabase
           .from('ideas')
           .update({ is_used: false })
           .eq('titulo', action.nome);
+        if (refreshIdeas) refreshIdeas(); // Atualiza listbox após liberar a ideia
       }
 
       await markIdeaAsAvailableWhenRemovedFromProgram(action.nome, action.produto);
-
-      // Atualiza ideias disponíveis aqui ao remover (UX)
-      // O onActionsChange normalmente reflete a mudança até re-load externo; poderia ser melhorado com refreshIdeas se passado via props.
       onActionsChange(actions.filter((a) => a.id !== action.id));
       toast({ title: "Ação excluída!" });
     } catch (error: any) {

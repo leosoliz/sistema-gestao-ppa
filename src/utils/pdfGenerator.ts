@@ -1,15 +1,21 @@
 import jsPDF from 'jspdf';
 import { Program } from '@/pages/Index';
 
+/**
+ * Gera um documento PDF com os detalhes completos de um programa.
+ * O PDF é estilizado para ser um relatório formal e legível.
+ * @param program O objeto do programa a ser exportado.
+ */
 export const generateProgramPDF = (program: Program) => {
+  // Inicializa o documento PDF no formato A4, orientação retrato, com unidades em milímetros.
   const doc = new jsPDF('p', 'mm', 'a4');
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 15;
   const contentWidth = pageWidth - 2 * margin;
-  let y = 20;
+  let y = 20; // Variável 'y' controla a posição vertical do cursor de escrita.
 
-  // --- Colors & Fonts ---
+  // --- Cores e Fontes Padrão ---
   const colors = {
     primary: '#0D47A1', // Dark Blue
     secondary: '#42A5F5', // Light Blue
@@ -27,15 +33,17 @@ export const generateProgramPDF = (program: Program) => {
     doc.setTextColor(color);
   };
 
-  // --- Helper Functions ---
+  // --- Funções Auxiliares ---
+  // Verifica se o conteúdo a ser adicionado cabe na página atual. Se não, cria uma nova página.
   const checkPageBreak = (neededHeight: number) => {
     if (y + neededHeight > pageHeight - 20) {
       doc.addPage();
       y = 20;
-      addHeader();
+      addHeader(); // Adiciona o cabeçalho em cada nova página.
     }
   };
 
+  // Adiciona texto com quebra de linha automática.
   const addWrappedText = (text: string, x: number, startY: number, maxWidth: number, options: { fontSize?: number, color?: string, lineHeightFactor?: number } = {}) => {
     const { fontSize = 10, color = colors.textSecondary, lineHeightFactor = 1.5 } = options;
     setFont('normal', fontSize, color);
@@ -44,7 +52,7 @@ export const generateProgramPDF = (program: Program) => {
     return startY + (lines.length * fontSize * 0.35 * lineHeightFactor);
   };
 
-  // --- Header ---
+  // --- Cabeçalho do Documento ---
   const addHeader = () => {
     doc.setFillColor(colors.primary);
     doc.rect(0, 0, pageWidth, 25, 'F');
@@ -58,7 +66,7 @@ export const generateProgramPDF = (program: Program) => {
   
   addHeader();
 
-  // --- Program Title ---
+  // --- Título do Programa ---
   setFont('bold', 22, colors.primary);
   y = addWrappedText(program.programa, margin, y, contentWidth, { fontSize: 22, color: colors.primary, lineHeightFactor: 1.2 });
   y += 5;
@@ -67,7 +75,7 @@ export const generateProgramPDF = (program: Program) => {
   doc.line(margin, y, margin + 70, y);
   y += 10;
 
-  // --- Metadata Grid ---
+  // --- Grade de Metadados ---
   const metaData = [
     { label: 'SECRETARIA', value: program.secretaria },
     { label: 'DEPARTAMENTO', value: program.departamento },
@@ -97,13 +105,15 @@ export const generateProgramPDF = (program: Program) => {
   });
   y += Math.ceil(metaData.length / 2) * (boxHeight + 5);
 
-  // --- Total Budget ---
+  // --- Card de Orçamento Total ---
+  // Função para calcular o total orçamentário de uma única ação.
   const calculateActionTotal = (acao) => {
     const vals = [acao.orcamento2026, acao.orcamento2027, acao.orcamento2028, acao.orcamento2029].map(
       v => parseFloat((v || "0").replace(/[^\d,]/g, '').replace(',', '.') || "0")
     );
     return vals.reduce((s, v) => s + v, 0);
   };
+  // Calcula o orçamento total do programa somando os totais de todas as suas ações.
   const totalOrcamento = program.acoes.reduce((total, acao) => total + calculateActionTotal(acao), 0);
   
   if (totalOrcamento > 0) {
@@ -122,16 +132,18 @@ export const generateProgramPDF = (program: Program) => {
     y += 10;
   }
   
-  // --- Program Sections (Cards) ---
+  // --- Seções de Conteúdo (Descrição, Justificativa, etc.) ---
+  // Função para desenhar um "card" de seção com título e conteúdo.
   const drawSectionCard = (title: string, content: string | null | undefined) => {
     if (!content) return;
     
+    // Calcula a altura necessária para o texto para gerenciar a quebra de página.
     const textHeight = doc.getTextDimensions(content, { maxWidth: contentWidth - 20, fontSize: 10 }).h;
     checkPageBreak(textHeight + 30);
     
     const cardY = y;
     
-    // Header
+    // Cabeçalho do card
     doc.setFillColor(colors.primary);
     doc.rect(margin, cardY, contentWidth, 10, 'F');
     setFont('bold', 12, colors.white);
@@ -154,11 +166,11 @@ export const generateProgramPDF = (program: Program) => {
   drawSectionCard('JUSTIFICATIVA', program.justificativa);
   drawSectionCard('OBJETIVOS E DIRETRIZES', objetivosDiretrizes);
   
-  // --- Actions Section ---
+  // --- Seção de Ações do Programa ---
   if (program.acoes.length > 0) {
     checkPageBreak(30);
     
-    // Section Title
+    // Título da Seção
     setFont('bold', 16, colors.primary);
     doc.text('AÇÕES DO PROGRAMA', margin, y);
     y += 5;
@@ -168,22 +180,22 @@ export const generateProgramPDF = (program: Program) => {
     y += 10;
     
     program.acoes.forEach((acao, index) => {
-      checkPageBreak(70);
+      checkPageBreak(70); // Estima o espaço necessário para cada card de ação.
 
       const actionCardY = y;
       
-      // Card background
+      // Fundo do card da ação.
       doc.setDrawColor(colors.border);
       doc.setFillColor(colors.background);
       doc.roundedRect(margin, actionCardY, contentWidth, 65, 3, 3, 'FD');
 
-      // Action Number
+      // Círculo com o número da ação.
       doc.setFillColor(colors.accent);
       doc.circle(margin + 12, actionCardY + 12, 6, 'F');
       setFont('bold', 12, colors.white);
       doc.text(String(index + 1), margin + 12, actionCardY + 13.5, { align: 'center' });
       
-      // Action Name
+      // Nome da ação.
       setFont('bold', 12, colors.primary);
       addWrappedText(acao.nome, margin + 25, actionCardY + 10, contentWidth - 35, { fontSize: 12, color: colors.primary, lineHeightFactor: 1.2 });
       
@@ -191,7 +203,7 @@ export const generateProgramPDF = (program: Program) => {
       const col2X = margin + contentWidth / 2;
       const dataY = actionCardY + 25;
       
-      // Details
+      // Detalhes (Produto e Fonte).
       setFont('bold', 9, colors.textPrimary);
       doc.text('PRODUTO/SERVIÇO:', col1X, dataY);
       setFont('normal', 9, colors.textSecondary);
@@ -204,7 +216,7 @@ export const generateProgramPDF = (program: Program) => {
 
       const tableY = dataY + 8;
       
-      // Table Header
+      // Cabeçalho da tabela de metas e orçamentos.
       setFont('bold', 8, colors.textSecondary);
       doc.text('ANO', col1X, tableY);
       doc.text('META FÍSICA', col1X + 40, tableY, { align: 'right' });
@@ -213,7 +225,7 @@ export const generateProgramPDF = (program: Program) => {
       doc.setDrawColor(colors.border);
       doc.line(col1X, tableY + 2, margin + contentWidth - 10, tableY + 2);
       
-      // Table Rows
+      // Linhas da tabela (uma para cada ano).
       let tableRowY = tableY + 7;
       const years = ['2026', '2027', '2028', '2029'];
       const metas = [acao.metaFisica2026, acao.metaFisica2027, acao.metaFisica2028, acao.metaFisica2029];
@@ -231,7 +243,7 @@ export const generateProgramPDF = (program: Program) => {
         tableRowY += 6;
       });
 
-      // Action Total Budget
+      // Orçamento total da ação.
       const actionTotal = calculateActionTotal(acao);
       if(actionTotal > 0) {
         setFont('bold', 9, colors.accent);
@@ -239,11 +251,11 @@ export const generateProgramPDF = (program: Program) => {
         doc.text(actionTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), col2X + 80, tableY + 15, { align: 'right' });
       }
       
-      y = actionCardY + 75;
+      y = actionCardY + 75; // Incrementa o cursor vertical para a próxima ação.
     });
   }
 
-  // --- Add Footers to all pages ---
+  // --- Adiciona Rodapés em todas as páginas ---
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
@@ -253,7 +265,7 @@ export const generateProgramPDF = (program: Program) => {
     doc.text(`Página ${i} de ${pageCount}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
   }
 
-  // --- Save file ---
+  // --- Salva o arquivo ---
   const fileName = `programa-${program.programa.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.pdf`;
   doc.save(fileName);
 };

@@ -5,18 +5,29 @@ import { Badge } from "@/components/ui/badge";
 import { Edit, Calendar, Printer, Sheet } from "lucide-react";
 import { Program } from "@/pages/Index";
 
+// Define a interface para as propriedades que o componente ProgramHeader espera receber.
 interface ProgramHeaderProps {
+  /** O objeto completo do programa a ser exibido. */
   program: Program;
+  /** O valor total do orçamento do programa, já calculado. */
   totalOrcamento: number;
+  /** Função de callback para ser chamada quando o botão "Editar" for clicado. */
   onEdit: () => void;
+  /** Função de callback para gerar o PDF. */
   onGeneratePDF: () => void;
+  /** Função de callback para gerar o Excel. */
   onGenerateExcel: () => void;
 }
 
+/**
+ * Componente responsável por renderizar o cabeçalho da página de detalhes de um programa.
+ * Exibe o título, informações resumidas (secretaria, departamento) e botões de ação.
+ */
 export const ProgramHeader = ({ program, totalOrcamento, onEdit, onGeneratePDF, onGenerateExcel }: ProgramHeaderProps) => {
   return (
     <CardHeader>
       <div className="flex justify-between items-start">
+        {/* Seção do Título e Descrição */}
         <div className="flex-1">
           <CardTitle className="text-2xl text-blue-900 mb-2">
             {program.programa}
@@ -25,6 +36,7 @@ export const ProgramHeader = ({ program, totalOrcamento, onEdit, onGeneratePDF, 
             {program.secretaria} - {program.departamento}
           </CardDescription>
         </div>
+        {/* Seção de Botões de Ação */}
         <div className="flex items-center gap-2">
           <Button 
             onClick={onGenerateExcel} 
@@ -49,6 +61,7 @@ export const ProgramHeader = ({ program, totalOrcamento, onEdit, onGeneratePDF, 
         </div>
       </div>
       
+      {/* Seção de Metadados com Badges */}
       <div className="flex flex-wrap gap-4 mt-4">
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-gray-500" />
@@ -58,9 +71,10 @@ export const ProgramHeader = ({ program, totalOrcamento, onEdit, onGeneratePDF, 
         </div>
         
         <Badge variant="secondary" className="text-sm">
-          {program.acoes.length} ações
+          {program.acoes.length} {program.acoes.length === 1 ? 'ação' : 'ações'}
         </Badge>
         
+        {/* O badge de orçamento só é exibido se o valor for maior que zero. */}
         {totalOrcamento > 0 && (
           <Badge variant="outline" className="text-sm">
             Orçamento Total: {totalOrcamento.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}

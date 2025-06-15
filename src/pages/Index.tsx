@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +13,7 @@ import { usePrograms } from "@/hooks/usePrograms";
 import { useIdeas } from "@/hooks/useIdeas";
 import { useEixos } from "@/hooks/useEixos";
 
+/** Interface para uma Ação de um programa. */
 export interface Action {
   id: string;
   nome: string;
@@ -30,6 +30,7 @@ export interface Action {
   orcamento2029?: string;
 }
 
+/** Interface para um Programa. */
 export interface Program {
   id: string;
   secretaria: string;
@@ -44,6 +45,7 @@ export interface Program {
   createdAt: Date;
 }
 
+/** Interface para uma Ideia do banco de ideias. */
 export interface Idea {
   id: string;
   nome: string;
@@ -54,47 +56,60 @@ export interface Idea {
   isUsed?: boolean;
 }
 
+/**
+ * Componente principal da aplicação (Página Index).
+ * Orquestra a exibição das diferentes seções (Dashboard, Programas, Ideias, etc.)
+ * e gerencia o estado global da aplicação, como o programa selecionado.
+ */
 const Index = () => {
+  // Estado para armazenar o programa que está sendo visualizado em detalhe.
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+  // Estado para controlar a aba ativa na interface principal.
   const [activeTab, setActiveTab] = useState("dashboard");
   
+  // Hooks customizados para buscar e gerenciar os dados de programas, ideias e eixos.
   const { programs, loading: programsLoading, addProgram, updateProgram, deleteProgram, refreshPrograms } = usePrograms();
   const { ideas, loading: ideasLoading, addIdea, deleteIdea, updateIdea, markIdeaAsUsed, syncIdeasUsageStatus, refreshIdeas } = useIdeas();
   const { eixos, loading: eixosLoading } = useEixos();
 
-  // Sync selectedProgram with the main programs list to reflect updates
+  // Efeito para manter o `selectedProgram` sincronizado com a lista principal `programs`.
+  // Isso é crucial para que as atualizações feitas em um programa (ex: edição) sejam refletidas
+  // na tela de detalhes sem precisar de recarregamento manual.
   useEffect(() => {
     if (selectedProgram) {
       const freshProgram = programs.find(p => p.id === selectedProgram.id);
       if (freshProgram) {
-        // Use stringify for a simple deep comparison to prevent re-render loops.
+        // Compara os objetos para evitar re-renderizações desnecessárias.
         if (JSON.stringify(selectedProgram) !== JSON.stringify(freshProgram)) {
           setSelectedProgram(freshProgram);
         }
       } else {
-        // The program might have been deleted.
+        // Se o programa não for encontrado na lista, ele pode ter sido excluído.
         setSelectedProgram(null);
         setActiveTab("dashboard");
       }
     }
-  }, [programs]);
+  }, [programs, selectedProgram]);
 
-  // Refresh ideas list when switching to ideas tab
+  // Efeito para recarregar a lista de ideias quando o usuário navega para a aba "Banco de Ideias".
+  // Garante que os dados exibidos (especialmente o status 'isUsed') estejam sempre atualizados.
   useEffect(() => {
     if (activeTab === "ideias") {
       refreshIdeas();
     }
   }, [activeTab, refreshIdeas]);
 
+  // Função para definir um programa como selecionado e navegar para a aba de visualização.
   const viewProgram = (program: Program) => {
     setSelectedProgram(program);
     setActiveTab("view");
   };
 
+  // Manipulador para a atualização de um programa.
   const handleUpdateProgram = (updatedProgram: Program) => {
     updateProgram(updatedProgram);
-    setSelectedProgram(updatedProgram);
-    refreshPrograms(); // Atualiza lista após edição! Opcional, mas recomendado para sincronia
+    setSelectedProgram(updatedProgram); // Atualiza o estado local imediatamente.
+    refreshPrograms(); // Força a atualização da lista principal para garantir consistência.
   };
 
   // Novo cálculo do orçamento total usando todos os anos das ações:
@@ -117,6 +132,7 @@ const Index = () => {
     });
   };
 
+  // Exibe uma tela de carregamento enquanto os dados principais estão sendo buscados.
   if (programsLoading || ideasLoading || eixosLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
@@ -128,6 +144,7 @@ const Index = () => {
     );
   }
 
+  // Renderização principal da página.
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <header className="bg-white shadow-sm border-b border-blue-200">
@@ -247,7 +264,7 @@ const Index = () => {
                 ideas={ideas}
                 onUpdate={handleUpdateProgram}
                 onAddToIdeasBank={addIdea}
-                refreshPrograms={refreshPrograms} // NOVO!
+                refreshPrograms={refreshPrograms}
                 refreshIdeas={refreshIdeas}
               />
             )}

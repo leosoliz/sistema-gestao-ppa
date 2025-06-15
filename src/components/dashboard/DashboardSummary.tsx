@@ -10,6 +10,11 @@ interface DashboardSummaryProps {
   eixos: Eixo[];
 }
 
+/**
+ * Formata um valor numérico como moeda brasileira (BRL).
+ * @param value O número a ser formatado.
+ * @returns A string formatada, ex: "R$ 1.234,56".
+ */
 const formatCurrency = (value: number) => {
   return value.toLocaleString('pt-BR', {
     style: 'currency',
@@ -18,12 +23,22 @@ const formatCurrency = (value: number) => {
   });
 };
 
+/**
+ * Converte uma string de moeda no formato brasileiro para um número.
+ * @param value A string a ser convertida.
+ * @returns O valor numérico.
+ */
 const parseCurrency = (value: string | undefined | null): number => {
     if (!value) return 0;
     return parseFloat(value.replace(/[^\d,]/g, '').replace(',', '.') || '0');
 };
 
+/**
+ * Componente que exibe os cards de resumo no topo do dashboard, com os principais
+ * indicadores do sistema (total de programas, ações, orçamentos, etc.).
+ */
 export const DashboardSummary = ({ programs, ideas, eixos }: DashboardSummaryProps) => {
+  // Calcula o orçamento agregado por ano, iterando sobre todos os programas e suas ações.
   const budgetByYear = programs.reduce((acc, program) => {
     program.acoes.forEach(action => {
       acc.budget2026 += parseCurrency(action.orcamento2026);
@@ -34,12 +49,17 @@ export const DashboardSummary = ({ programs, ideas, eixos }: DashboardSummaryPro
     return acc;
   }, { budget2026: 0, budget2027: 0, budget2028: 0, budget2029: 0 });
 
+  // Calcula o orçamento total somando os totais anuais.
   const totalBudget = budgetByYear.budget2026 + budgetByYear.budget2027 + budgetByYear.budget2028 + budgetByYear.budget2029;
+  
+  // Contabiliza as ideias que já foram utilizadas em programas e as que ainda estão disponíveis.
   const usedIdeasCount = ideas.filter(idea => idea.isUsed).length;
   const availableIdeasCount = ideas.length - usedIdeasCount;
 
+  // Renderiza a grade de cards com os dados calculados.
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+      {/* Card: Total de Programas */}
       <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">Total de Programas</CardTitle>
@@ -49,6 +69,7 @@ export const DashboardSummary = ({ programs, ideas, eixos }: DashboardSummaryPro
         </CardContent>
       </Card>
       
+      {/* Card: Total de Ações */}
       <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">Total de Ações</CardTitle>
@@ -60,6 +81,7 @@ export const DashboardSummary = ({ programs, ideas, eixos }: DashboardSummaryPro
         </CardContent>
       </Card>
       
+      {/* Card: Banco de Ideias */}
       <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">Banco de Ideias</CardTitle>
@@ -79,6 +101,7 @@ export const DashboardSummary = ({ programs, ideas, eixos }: DashboardSummaryPro
         </CardContent>
       </Card>
 
+      {/* Card: Eixos Temáticos */}
       <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">Eixos Temáticos</CardTitle>
@@ -88,6 +111,7 @@ export const DashboardSummary = ({ programs, ideas, eixos }: DashboardSummaryPro
         </CardContent>
       </Card>
 
+      {/* Card: Orçamentos Detalhados */}
       <Card className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">

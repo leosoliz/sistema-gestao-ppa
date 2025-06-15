@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, FileText, Lightbulb, Eye, Target } from "lucide-react";
 import { ProgramForm } from "@/components/ProgramForm";
 import { ProgramList } from "@/components/ProgramList";
@@ -150,17 +151,17 @@ const Index = () => {
       <header className="bg-white shadow-sm border-b border-blue-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <img 
                 src="/lovable-uploads/e00a40bf-e999-462e-bf44-4324f7b7e85f.png" 
                 alt="Brasão Presidente Getúlio" 
-                className="h-12 w-auto"
+                className="h-10 sm:h-12 w-auto"
               />
               <div>
-                <h1 className="text-xl font-bold text-blue-900">
+                <h1 className="text-base sm:text-xl font-bold text-blue-900">
                   Sistema de Gestão de Programas
                 </h1>
-                <p className="text-sm text-blue-600">
+                <p className="text-xs sm:text-sm text-blue-600">
                   Prefeitura Municipal de Presidente Getúlio
                 </p>
               </div>
@@ -171,7 +172,34 @@ const Index = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-white/50 backdrop-blur">
+          {/* Navegação por Select em telas pequenas */}
+          <div className="sm:hidden px-1">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma seção..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="dashboard">
+                  <div className="flex items-center gap-2"><FileText className="h-4 w-4" />Dashboard</div>
+                </SelectItem>
+                <SelectItem value="novo">
+                  <div className="flex items-center gap-2"><Plus className="h-4 w-4" />Novo Programa</div>
+                </SelectItem>
+                <SelectItem value="ideias">
+                  <div className="flex items-center gap-2"><Lightbulb className="h-4 w-4" />Banco de Ideias</div>
+                </SelectItem>
+                <SelectItem value="view" disabled={!selectedProgram}>
+                  <div className="flex items-center gap-2"><Eye className="h-4 w-4" />Visualizar</div>
+                </SelectItem>
+                <SelectItem value="configuracoes">
+                  <div className="flex items-center gap-2"><Target className="h-4 w-4" />Eixos Temáticos</div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Navegação por Tabs em telas maiores */}
+          <TabsList className="hidden sm:grid w-full grid-cols-5 bg-white/50 backdrop-blur">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Dashboard
